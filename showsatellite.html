@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>卫星轨道可视化系统</title>
+  <link rel="stylesheet" href="https://unpkg.com/cesium@1.134/Build/Cesium/Widgets/widgets.css">
+  <script src="https://unpkg.com/cesium@1.134/Build/Cesium/Cesium.js"></script>
+  <script src="https://unpkg.com/satellite.js@5.0.0/dist/satellite.min.js"></script>
+  <script src="./globeRotate.js"></script>
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    #cesiumContainer {
+      width: 100%;
+      height: 100%;
+    }
+    /* 控制面板样式 - 可拖动 */
+    .control-panel {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 240px;
+      max-height: 85vh;
+      overflow-y: auto;
+      background: rgba(30, 30, 30, 0.9);
+      color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      z-index: 100;
+      user-select: none; /* 防止拖动时选中文本 */
+    }
+    /* 拖动手柄样式 */
+    .panel-header {
+      padding: 12px 15px;
+      border-bottom: 1px solid #444;
+      cursor: move; /* 显示移动光标 */
+      background: rgba(40, 40, 40, 0.95);
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+      position: relative;
+    }
+    .panel-header h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    .panel-content {
+      padding: 15px;
+    }
+    /* 全局控制区 */
+    .global-controls {
+      margin-bottom: 15px;
+      padding: 0;
+    }
+    .control-item {
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      width: 100%;
+    }
+    /* 开关样式 */
+    .toggle-switch {
+      position: relative;
+      width: 0px;
+      height: 20px;
+      margin: 0;
+      appearance: none;
+      cursor: pointer;
+    }
+    .toggle-switch + label {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+      background: #af4c4c;
+      border: 0.5px solid rgba(117, 117, 117, 0.31);
+      box-shadow: inset 0px 0px 2px 0px rgba(0,0,0,0.2), 0 -1px 2px rgba(0,0,0,0.15);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .toggle-switch + label::before {
+      content: '';
+      position: absolute;
+      border: none;
+      width: 20px;
+      height: 20px;
+      box-shadow: inset 0.5px -1px 1px rgba(0, 0, 0, 0.35);
+      background: #fff;
+      transform: rotate(-20deg);
+      left: 0;
+      top: 0;
+      border-radius: 50%;
+      transition: transform 0.3s ease, left 0.3s ease;
+    }
+    .toggle-switch + label::after {
+      content: '';
+      position: absolute;
+      background: transparent;
+      height: calc(100% + 4px);
+      border-radius: 12px;
+      top: -2px;
+      width: calc(100% + 4px);
+      left: -2px;
+      z-index: -1;
+      box-shadow: inset 0px 1px 2px -1px rgba(0,0,0,0.2), 0px 1px 1px 0px rgba(151, 151, 151, 0.2);
+    }
+    .toggle-switch:checked + label {
+      background: #4caf50;
+    }
+    .toggle-switch:checked + label::before {
+      left: 20px;
+      transform: rotate(20deg);
+    }
+    .switch-label-text {
+      font-size: 12px;
+      user-select: none;
+      flex: 1;
+    }
+    /* 卫星列表样式 */
+    .satellite-list {
+      border-top: 1px solid #444;
+      padding-top: 15px;
+    }
+    .list-title {
+      margin: 0 0 10px 0;
+      font-size: 13px;
+      color: #ccc;
+    }
+    .satellite-item {
+      display: flex;
+      align-items: center;
+      padding: 6px 8px;
+      margin-bottom: 5px;
+      border-radius: 4px;
+      background: rgba(60, 60, 60, 0.5);
+      cursor: pointer;
+      transition: background 0.2s;
+      width: calc(100% - 16px);
+    }
+    .satellite-item:hover {
+      background: rgba(80, 80, 80, 0.7);
+    }
+    .satellite-item .visibility-indicator {
+      width: 14px;
+      height: 14px;
+      border: 1px solid #aaa;
+      border-radius: 2px;
+      margin-right: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .satellite-item.visible .visibility-indicator {
+      background-color: #4CAF50;
+      border-color: #4CAF50;
+    }
+    .satellite-item.visible .visibility-indicator::after {
+      content: "✓";
+      font-size: 10px;
+      color: white;
+    }
+    .satellite-item .name {
+      font-size: 12px;
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="cesiumContainer"></div>
+  
+  <!-- 可拖动的控制面板 -->
+  <div class="control-panel" id="draggablePanel">
+    <div class="panel-header" id="dragHandle">
+      <h3>卫星轨道控制</h3>
+    </div>
+    <div class="panel-content">
+      <div class="global-controls">
+        <div class="control-item">
+          <input type="checkbox" id="toggleEarthRotate" class="toggle-switch" checked>
+          <label for="toggleEarthRotate"></label>
+          <span class="switch-label-text">地球自转</span>
+        </div>
+        <div class="control-item">
+          <input type="checkbox" id="toggleAllOrbits" class="toggle-switch" checked>
+          <label for="toggleAllOrbits"></label>
+          <span class="switch-label-text">显示所有轨道</span>
+        </div>
+        <div class="control-item">
+          <input type="checkbox" id="toggleAllLabels" class="toggle-switch" checked>
+          <label for="toggleAllLabels"></label>
+          <span class="switch-label-text">显示所有卫星名称</span>
+        </div>
+      </div>
+      
+      <div class="satellite-list">
+        <h4 class="list-title">卫星列表</h4>
+        <div id="satelliteItemsContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 初始化Cesium地图
+    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI0NmM1M2YxNC01YWNmLTQzOTAtYmY4MC02YWVlNTE2NDM3ZDYiLCJpZCI6MjYxOTQzLCJpYXQiOjE3MzM5OTU2MjB9.5cQ0mYBL1o0OQVIbB4J0BjTAxc-NoOxwHgwpYtJP-K8';
+    window.CESIUM_BASE_URL = "https://unpkg.com/cesium@1.134/Build/Cesium/";
+    const viewer = new Cesium.Viewer("cesiumContainer", {
+      animation: true,
+      timeline: true,
+      sceneModePicker: true,
+      baseLayerPicker: true,
+    });
+
+    // 全局状态管理
+    const state = {
+      satellites: [],          // 存储所有卫星数据
+      globalShowOrbits: true,  // 全局轨道显示状态
+      globalShowLabels: true   // 全局名称显示状态
+    };
+
+    // DOM元素引用
+    const satelliteItemsContainer = document.getElementById("satelliteItemsContainer");
+    const toggleAllOrbits = document.getElementById("toggleAllOrbits");
+    const toggleAllLabels = document.getElementById("toggleAllLabels");
+    const toggleEarthRotate = document.getElementById("toggleEarthRotate");
+    const draggablePanel = document.getElementById("draggablePanel");
+    const dragHandle = document.getElementById("dragHandle");
+
+    /**
+     * 实现控制面板拖动功能
+     */
+    function initDragFunctionality() {
+      let isDragging = false;
+      let offsetX, offsetY;
+
+      // 鼠标按下时记录初始位置
+      dragHandle.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        const panelRect = draggablePanel.getBoundingClientRect();
+        offsetX = e.clientX - panelRect.left;
+        offsetY = e.clientY - panelRect.top;
+        dragHandle.style.cursor = 'grabbing'; // 显示抓取光标
+        document.body.style.userSelect = 'none'; // 防止拖动时选中文本
+      });
+
+      // 鼠标移动时更新面板位置
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        
+        // 计算新位置（限制在窗口内）
+        const newX = e.clientX - offsetX;
+        const newY = e.clientY - offsetY;
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        const panelWidth = draggablePanel.offsetWidth;
+        const panelHeight = draggablePanel.offsetHeight;
+
+        // 限制面板在窗口可视范围内
+        const constrainedX = Math.max(0, Math.min(newX, windowWidth - panelWidth));
+        const constrainedY = Math.max(0, Math.min(newY, windowHeight - panelHeight));
+
+        // 更新位置
+        draggablePanel.style.left = `${constrainedX}px`;
+        draggablePanel.style.top = `${constrainedY}px`;
+        draggablePanel.style.right = 'auto'; // 取消右侧定位
+        draggablePanel.style.bottom = 'auto'; // 取消底部定位
+      });
+
+      // 鼠标释放时结束拖动
+      document.addEventListener('mouseup', () => {
+        if (isDragging) {
+          isDragging = false;
+          dragHandle.style.cursor = 'move'; // 恢复移动光标
+          document.body.style.userSelect = ''; // 恢复文本选择
+        }
+      });
+
+      // 鼠标离开窗口时结束拖动
+      document.addEventListener('mouseleave', () => {
+        if (isDragging) {
+          isDragging = false;
+          dragHandle.style.cursor = 'move';
+          document.body.style.userSelect = '';
+        }
+      });
+    }
+
+    /**
+     * 1. 加载并解析TLE数据
+     */
+    async function loadTLEFile(filePath) {
+      try {
+        const response = await fetch(filePath);
+        const text = await response.text();
+        return parseTLE(text); // 解析TLE文本
+      } catch (error) {
+        console.error("读取TLE文件失败：", error);
+        return [];
+      }
+    }
+
+    // 2. 解析TLE文本
+    function parseTLE(text) {
+      const tleList = [];
+      const lines = text.split(/[\n,]+/).map(line => line.trim()).filter(line => line);
+      for (let i = 0; i + 2 < lines.length; i += 3) {
+        const name = lines[i];
+        const line1 = lines[i + 1];
+        const line2 = lines[i + 2];
+        if (line1.startsWith('1 ') && line2.startsWith('2 ')) {
+          tleList.push({ name, line1, line2 });
+        }
+      }
+      return tleList;
+    }
+
+    /**
+     * 2. 预计算卫星轨道（ECI坐标系）
+     * @param {Object} satrec - 卫星轨道参数
+     * @param {number} points - 轨道点数量
+     * @param {number} period - 轨道周期（毫秒）
+     * @returns {Cesium.Cartesian3[]} 轨道点数组
+     */
+    function precomputeOrbit(satrec) {
+      const points = 5;
+      const period =  2*Math.PI/satrec.no*60*1000;
+      const orbitPoints = [];
+      const startTime = new Date();
+      
+      for (let i = 0; i < points; i++) {
+        const time = new Date(startTime.getTime() + (i / points) * period);
+        const position = satellite.propagate(satrec, time).position;
+        
+        // 转换为米并存储
+        orbitPoints.push(Cesium.Cartesian3.fromElements(
+          position.x * 1000,
+          position.y * 1000,
+          position.z * 1000
+        ));
+      }
+      orbitPoints.push(orbitPoints[0]);
+      return orbitPoints;
+    }
+
+    /**
+     * 3. 创建卫星实体和轨道
+     * @param {Object} tle - TLE数据
+     */
+    function createSatellite(tle) {
+      try {
+        // 解析TLE数据
+        const satrec = satellite.twoline2satrec(tle.line1, tle.line2);
+        if (satrec.error) throw new Error(satrec.error);
+
+        // 预计算轨道
+        const eciOrbit = precomputeOrbit(satrec);
+        //console.log("orbit size:",eciOrbit);
+        
+        // 生成随机颜色（区分不同卫星）
+        const color = Cesium.Color.fromRandom({
+          minimumRed: 0.5,
+          minimumGreen: 0.5,
+          minimumBlue: 0.5,
+          alpha: 0.8
+        });
+
+        // 创建轨道Primitive
+        const orbitGeometry = new Cesium.PolylineGeometry({
+          positions: eciOrbit,
+          width: 1,
+          vertexFormat: Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
+        });
+        const orbitInstance = new Cesium.GeometryInstance({
+          geometry: orbitGeometry,
+          id: tle.name
+        });
+        const orbitAppearance = new Cesium.PolylineMaterialAppearance({
+          material: Cesium.Material.fromType(Cesium.Material.ColorType, { color })
+        });
+        const orbitPrimitive = new Cesium.Primitive({
+          geometryInstances: orbitInstance,
+          appearance: orbitAppearance,
+          modelMatrix: Cesium.Matrix4.IDENTITY,
+          show: true
+        });
+        viewer.scene.primitives.add(orbitPrimitive);
+
+        // 创建卫星点实体
+        const satelliteEntity = viewer.entities.add({
+          name: tle.name,
+          position: Cesium.Cartesian3.ZERO,
+          point: {
+            pixelSize: 6,
+            color: color,
+            outlineWidth: 1,
+            outlineColor: Cesium.Color.BLACK
+          },
+          label: {
+            text: tle.name,
+            font: "12px sans-serif",
+            pixelOffset: new Cesium.Cartesian2(0, 15),
+            show: true
+          },
+          show: true
+        });
+
+        // 创建列表项
+        const listItem = document.createElement("div");
+        listItem.className = "satellite-item visible";
+        listItem.innerHTML = `
+          <span class="visibility-indicator"></span>
+          <span class="name">${tle.name}</span>
+        `;
+        listItem.dataset.name = tle.name;
+
+        // 列表项点击事件（切换单颗卫星显隐）
+        listItem.addEventListener("click", () => {
+          const isVisible = !listItem.classList.contains("visible");
+          listItem.classList.toggle("visible", isVisible);
+          
+          // 更新卫星状态
+          const sat = state.satellites.find(s => s.name === tle.name);
+          if (sat) {
+            sat.isVisible = isVisible;
+            updateSatelliteVisibility(sat);
+          }
+        });
+
+        satelliteItemsContainer.appendChild(listItem);
+
+        // 存储卫星数据
+        return {
+          name: tle.name,
+          satrec,
+          eciOrbit,
+          orbitPrimitive,
+          satelliteEntity,
+          listItem,
+          isVisible: true,
+          color
+        };
+      } catch (error) {
+        console.error(`创建卫星${tle.name}失败:`, error);
+        return null;
+      }
+    }
+
+    /**
+     * 4. 更新卫星可见性（结合全局开关和自身状态）
+     * @param {Object} sat - 卫星对象
+     */
+    function updateSatelliteVisibility(sat) {
+      const { isVisible } = sat;
+      // 轨道可见性 = 自身可见 && 全局轨道开启
+      sat.orbitPrimitive.show = isVisible && state.globalShowOrbits;
+      // 卫星点位可见性 = 自身可见
+      sat.satelliteEntity.show = isVisible;
+      // 标签可见性 = 自身可见 && 全局标签开启
+      sat.satelliteEntity.label.show = isVisible && state.globalShowLabels;
+    }
+
+    /**
+     * 5. 实时更新所有卫星位置和轨道
+     * @param {Cesium.JulianDate} time - 当前时间
+     */
+    function updateSatellites(time) {
+      const date = Cesium.JulianDate.toDate(time);
+      const gmst = satellite.gstime(date); // 计算格林尼治恒星时
+      const rotationMatrix = Cesium.Matrix4.fromRotation(
+        new Cesium.Matrix3.fromRotationZ(-gmst) // 地球自转矩阵
+      );
+
+      state.satellites.forEach(sat => {
+        // 只更新可见卫星
+        if (sat.isVisible) {
+          // 更新轨道旋转
+          sat.orbitPrimitive.modelMatrix = rotationMatrix;
+
+          // 更新卫星位置（ECI -> ECF）
+          const eciPos = satellite.propagate(sat.satrec, date).position;
+          const ecfPos = satellite.eciToEcf(eciPos, gmst);
+          sat.satelliteEntity.position = new Cesium.Cartesian3(
+            ecfPos.x * 1000,
+            ecfPos.y * 1000,
+            ecfPos.z * 1000
+          );
+        }
+      });
+    }
+
+    /**
+     * 初始化函数
+     */
+    async function init() {
+      // 初始化拖动功能
+      initDragFunctionality();
+      // 加载TLE数据
+      const tleList = await loadTLEFile("starlink.txt");
+      if (tleList.length === 0) {
+        console.error("未加载到有效TLE数据");
+        return;
+      }
+
+      // 创建所有卫星
+      tleList.forEach(tle => {
+        const sat = createSatellite(tle);
+        if (sat) state.satellites.push(sat);
+        console.log(sat.name);
+      });
+
+      // 全局开关事件
+      toggleAllOrbits.addEventListener("change", (e) => {
+        state.globalShowOrbits = e.target.checked;
+        state.satellites.forEach(sat => updateSatelliteVisibility(sat));
+      });
+
+      toggleAllLabels.addEventListener("change", (e) => {
+        state.globalShowLabels = e.target.checked;
+        state.satellites.forEach(sat => updateSatelliteVisibility(sat));
+      });
+      let globeRotate = new GlobeRotate(viewer);
+      toggleEarthRotate.addEventListener("change", (e) => {
+        if( e.target.checked)
+            globeRotate.start();
+        else
+            globeRotate.stop();
+        state.satellites.forEach(sat => updateSatelliteVisibility(sat));
+      });
+
+      // 监听时间变化，实时更新
+      viewer.clock.onTick.addEventListener(clock => {
+        updateSatellites(clock.currentTime);
+      });
+
+      // 初始视角
+      /*if (state.satellites.length > 0) {
+        viewer.zoomTo(state.satellites[0].satelliteEntity, new Cesium.HeadingPitchRange(0, -0.5, 10000000));
+      }*/
+    }
+
+    // 启动应用
+    init();
+  </script>
+</body>
+</html>
