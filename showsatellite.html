@@ -202,7 +202,8 @@
       </div>
       
       <div class="satellite-list">
-        <h4 class="list-title">卫星列表</h4>
+       <!-- 卫星列表标题，将通过JS动态更新数量 -->
+        <h4 class="list-title" id="satelliteListTitle">卫星列表</h4>
         <div id="satelliteItemsContainer"></div>
       </div>
     </div>
@@ -228,6 +229,7 @@
 
     // DOM元素引用
     const satelliteItemsContainer = document.getElementById("satelliteItemsContainer");
+    const satelliteListTitle = document.getElementById("satelliteListTitle"); // 新增：卫星列表标题元素
     const toggleAllOrbits = document.getElementById("toggleAllOrbits");
     const toggleAllLabels = document.getElementById("toggleAllLabels");
     const toggleEarthRotate = document.getElementById("toggleEarthRotate");
@@ -509,13 +511,18 @@
         return;
       }
 
-      // 创建所有卫星
+      // 创建所有卫星并统计成功创建的数量
+      let validSatelliteCount = 0;
       tleList.forEach(tle => {
         const sat = createSatellite(tle);
-        if (sat) state.satellites.push(sat);
-        console.log(sat.name);
+        if (sat){
+            state.satellites.push(sat);
+            validSatelliteCount++; // 只统计成功创建的卫星
+        }
+        //console.log(sat.name);
       });
-
+    satelliteListTitle.textContent = `卫星列表(${validSatelliteCount})`;
+    
       // 全局开关事件
       toggleAllOrbits.addEventListener("change", (e) => {
         state.globalShowOrbits = e.target.checked;
