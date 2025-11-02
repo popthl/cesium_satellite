@@ -125,6 +125,56 @@
       user-select: none;
       flex: 1;
     }
+        /* 卫星分组样式 */
+    .satellite-groups {
+      border-top: 1px solid #444;
+      padding-top: 15px;
+    }
+    .group-title {
+      margin: 15px 0 8px 0;
+      padding: 5px 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #fff;
+      background: rgba(70, 70, 70, 0.7);
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .group-title:first-child {
+      margin-top: 0;
+    }
+    .group-count {
+      font-size: 11px;
+      color: #ccc;
+      background: rgba(50, 50, 50, 0.7);
+      padding: 1px 6px;
+      border-radius: 10px;
+    }
+    .group-content {
+      margin-left: 8px;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .group-collapsed .group-content {
+      max-height: 0;
+    }
+    .group-expanded .group-content {
+      max-height: 500px; /* 足够容纳多个卫星项 */
+    }
+    .group-toggle {
+      font-size: 10px;
+      transition: transform 0.2s ease;
+    }
+    .group-collapsed .group-toggle {
+      transform: rotate(-90deg);
+    }
+    .group-expanded .group-toggle {
+      transform: rotate(0);
+    }
+
     /* 卫星列表样式 */
     .satellite-list {
       border-top: 1px solid #444;
@@ -205,6 +255,11 @@
        <!-- 卫星列表标题，将通过JS动态更新数量 -->
         <h4 class="list-title" id="satelliteListTitle">卫星列表</h4>
         <div id="satelliteItemsContainer"></div>
+              <!-- 卫星分组容器 -->
+      <div class="satellite-groups" id="satelliteGroupsContainer">
+        <!-- 分组内容将通过JS动态生成 -->
+      </div>
+
       </div>
     </div>
   </div>
@@ -222,12 +277,14 @@
 
     // 全局状态管理
     const state = {
+      groups: {}, // 存储分组信息 { 组名: { satellites: [], element: DOM元素 } }
       satellites: [],          // 存储所有卫星数据
       globalShowOrbits: true,  // 全局轨道显示状态
       globalShowLabels: true   // 全局名称显示状态
     };
 
     // DOM元素引用
+    const satelliteGroupsContainer = document.getElementById("satelliteGroupsContainer");
     const satelliteItemsContainer = document.getElementById("satelliteItemsContainer");
     const satelliteListTitle = document.getElementById("satelliteListTitle"); // 新增：卫星列表标题元素
     const toggleAllOrbits = document.getElementById("toggleAllOrbits");
@@ -292,6 +349,73 @@
           dragHandle.style.cursor = 'move';
           document.body.style.userSelect = '';
         }
+      });
+    }
+    /**
+     * 确定卫星所属分组
+     * 根据卫星名称特征进行分组
+     */
+    function getSatelliteGroup(satelliteName) {
+      const name = satelliteName.toLowerCase();
+      if (name.includes('gps')) return 'GPS卫星';
+      if (name.includes('noaa')) return 'NOAA卫星';
+      if (name.includes('iss') || name.includes('zarya')) return '国际空间站';
+      if (name.includes('hst') || name.includes('hubble')) return '哈勃望远镜';
+      if (name.includes('glonass')) return '格洛纳斯卫星';
+      if (name.includes('beidou-2') || name.includes('compass')) return '北斗2卫星';
+      if (name.includes('beidou-3 ') || name.includes('compass')) return '北斗3卫星';
+      return '其他卫星'; // 未匹配到的卫星归入其他组
+    }
+
+    /**
+     * 创建分组容器
+     */
+    function createGroup(groupName) {
+      // 如果分组已存在则直接返回
+      if (state.groups[groupName]) return state.groups[groupName].element;
+
+      // 创建分组元素
+      const groupElement = document.createElement('div');
+      groupElement.className = 'satellite-group group-expanded'; // 默认展开
+      groupElement.innerHTML = `
+        <div class="group-title">
+          <span>${groupName}</span>
+          <span class="group-count">0</span>
+          <span class="group-toggle">▸</span>
+        </div>
+        <div class="group-content"></div>
+      `;
+
+      // 分组折叠/展开功能
+      const titleElement = groupElement.querySelector('.group-title');
+      titleElement.addEventListener('click', (e) => {
+        // 点击标题文字或计数时才切换折叠状态，点击卫星项不触发
+        if (e.target.classList.contains('group-title') || 
+            e.target.classList.contains('group-count') ||
+            e.target.classList.contains('group-toggle')) {
+          groupElement.classList.toggle('group-expanded');
+          groupElement.classList.toggle('group-collapsed');
+        }
+      });
+
+      // 存储分组信息
+      state.groups[groupName] = {
+        satellites: [],
+        element: groupElement,
+        countElement: groupElement.querySelector('.group-count')
+      };
+
+      // 添加到容器
+      satelliteGroupsContainer.appendChild(groupElement);
+      return groupElement;
+    }
+
+    /**
+     * 更新分组计数
+     */
+    function updateGroupCounts() {
+      Object.values(state.groups).forEach(group => {
+        group.countElement.textContent = group.satellites.length;
       });
     }
 
@@ -414,7 +538,7 @@
           show: true
         });
 
-        // 创建列表项
+        /*// 创建列表项
         const listItem = document.createElement("div");
         listItem.className = "satellite-item visible";
         listItem.innerHTML = `
@@ -436,7 +560,39 @@
           }
         });
 
-        satelliteItemsContainer.appendChild(listItem);
+        satelliteItemsContainer.appendChild(listItem);*/
+        // 创建列表项
+        const listItem = document.createElement("div");
+        listItem.className = "satellite-item visible";
+        listItem.innerHTML = `
+          <span class="visibility-indicator"></span>
+          <span class="name">${tle.name}</span>
+        `;
+        listItem.dataset.name = tle.name;
+
+        // 卫星项点击事件（切换显隐）
+        listItem.addEventListener("click", (e) => {
+          e.stopPropagation(); // 防止触发分组折叠
+          const isVisible = !listItem.classList.contains("visible");
+          listItem.classList.toggle("visible", isVisible);
+          
+          const satellite = state.satellites.find(s => s.name === tle.name);
+          if (satellite) {
+            satellite.isVisible = isVisible;
+            updateSatelliteVisibility(satellite);
+          }
+        });
+
+        // 确定分组并添加到对应分组
+        const groupName = getSatelliteGroup(tle.name);
+        console.log(groupName);
+        const groupElement = createGroup(groupName);
+        const groupContent = groupElement.querySelector('.group-content');
+        groupContent.appendChild(listItem);
+
+        // 添加到分组数据
+        state.groups[groupName].satellites.push(tle.name);
+        updateGroupCounts();
 
         // 存储卫星数据
         return {
@@ -505,7 +661,7 @@
       // 初始化拖动功能
       initDragFunctionality();
       // 加载TLE数据
-      const tleList = await loadTLEFile("starlink.txt");
+      const tleList = await loadTLEFile("beidou.txt");
       if (tleList.length === 0) {
         console.error("未加载到有效TLE数据");
         return;
@@ -522,7 +678,7 @@
         //console.log(sat.name);
       });
     satelliteListTitle.textContent = `卫星列表(${validSatelliteCount})`;
-    
+
       // 全局开关事件
       toggleAllOrbits.addEventListener("change", (e) => {
         state.globalShowOrbits = e.target.checked;
@@ -541,7 +697,7 @@
             globeRotate.stop();
         state.satellites.forEach(sat => updateSatelliteVisibility(sat));
       });
-
+      globeRotate.start();
       // 监听时间变化，实时更新
       viewer.clock.onTick.addEventListener(clock => {
         updateSatellites(clock.currentTime);
