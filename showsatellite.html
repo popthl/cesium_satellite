@@ -19,12 +19,11 @@
       width: 100%;
       height: 100%;
     }
-    /* 控制面板样式 - 可拖动 */
     .control-panel {
       position: absolute;
       top: 20px;
       right: 20px;
-      width: 240px;
+      width: 340px;
       max-height: 85vh;
       overflow-y: auto;
       background: rgba(30, 30, 30, 0.9);
@@ -32,18 +31,16 @@
       border-radius: 8px;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
       font-family: 'Segoe UI', Arial, sans-serif;
-      z-index: 100;
-      user-select: none; /* 防止拖动时选中文本 */
+      z-index: 1000;
+      user-select: none;
     }
-    /* 拖动手柄样式 */
     .panel-header {
       padding: 12px 15px;
       border-bottom: 1px solid #444;
-      cursor: move; /* 显示移动光标 */
+      cursor: move;
       background: rgba(40, 40, 40, 0.95);
       border-top-left-radius: 8px;
       border-top-right-radius: 8px;
-      position: relative;
     }
     .panel-header h3 {
       margin: 0;
@@ -53,7 +50,6 @@
     .panel-content {
       padding: 15px;
     }
-    /* 全局控制区 */
     .global-controls {
       margin-bottom: 15px;
       padding: 0;
@@ -66,7 +62,6 @@
       cursor: pointer;
       width: 100%;
     }
-    /* 开关样式 */
     .toggle-switch {
       position: relative;
       width: 0px;
@@ -82,7 +77,7 @@
       height: 20px;
       background: #af4c4c;
       border: 0.5px solid rgba(117, 117, 117, 0.31);
-      box-shadow: inset 0px 0px 2px 0px rgba(0,0,0,0.2), 0 -1px 2px rgba(0,0,0,0.15);
+      box-shadow: inset 0px 0px 2px 0px rgba(0,0,0,0.2);
       border-radius: 10px;
       cursor: pointer;
       transition: background 0.3s ease;
@@ -90,7 +85,6 @@
     .toggle-switch + label::before {
       content: '';
       position: absolute;
-      border: none;
       width: 20px;
       height: 20px;
       box-shadow: inset 0.5px -1px 1px rgba(0, 0, 0, 0.35);
@@ -100,18 +94,6 @@
       top: 0;
       border-radius: 50%;
       transition: transform 0.3s ease, left 0.3s ease;
-    }
-    .toggle-switch + label::after {
-      content: '';
-      position: absolute;
-      background: transparent;
-      height: calc(100% + 4px);
-      border-radius: 12px;
-      top: -2px;
-      width: calc(100% + 4px);
-      left: -2px;
-      z-index: -1;
-      box-shadow: inset 0px 1px 2px -1px rgba(0,0,0,0.2), 0px 1px 1px 0px rgba(151, 151, 151, 0.2);
     }
     .toggle-switch:checked + label {
       background: #4caf50;
@@ -125,48 +107,97 @@
       user-select: none;
       flex: 1;
     }
-        /* 卫星分组样式 */
-    .satellite-groups {
+    /* 分组样式 */
+    .constellation-group {
       border-top: 1px solid #444;
       padding-top: 15px;
+      margin-top: 10px;
     }
-    .group-title {
-      margin: 15px 0 8px 0;
-      padding: 5px 8px;
-      font-size: 13px;
-      font-weight: 500;
+    .constellation-header {
+      margin: 10px 0 5px 0;
+      padding: 6px 10px;
+      font-size: 14px;
+      font-weight: 600;
       color: #fff;
-      background: rgba(70, 70, 70, 0.7);
+      background: rgba(60, 100, 180, 0.7);
       border-radius: 4px;
       cursor: pointer;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    .group-title:first-child {
-      margin-top: 0;
+    .level-1-group {
+      margin-left: 15px;
+      margin-bottom: 10px;
     }
-    .group-count {
-      font-size: 11px;
-      color: #ccc;
-      background: rgba(50, 50, 50, 0.7);
-      padding: 1px 6px;
-      border-radius: 10px;
+    .level-1-header {
+      margin: 8px 0 5px 0;
+      padding: 5px 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #e0e0e0;
+      background: rgba(80, 80, 120, 0.6);
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
+    .level-2-group {
+      margin-left: 30px;
+      margin-bottom: 8px;
+    }
+    .level-2-header {
+      margin: 6px 0 5px 0;
+      padding: 4px 6px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #d0d0d0;
+      background: rgba(80, 120, 80, 0.6);
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+      /* 三级分组（轨道面）- 修复类名和样式 */
+  .level-3-group {
+    margin-left: 45px; /* 三级分组缩进更大 */
+    margin-bottom: 8px;
+  }
+  .level-3-header {
+    margin: 6px 0 5px 0;
+    padding: 4px 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #d0d0d0;
+    background: rgba(120, 80, 80, 0.6); /* 三级分组颜色区分 */
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
     .group-content {
-      margin-left: 8px;
       overflow: hidden;
       transition: max-height 0.3s ease;
     }
     .group-collapsed .group-content {
       max-height: 0;
     }
+    /* 确保嵌套的分组能正确应用样式 */
+.level-1-group.group-collapsed > .group-content,
+.level-2-group.group-collapsed > .group-content,
+.level-3-group.group-collapsed > .group-content {
+  max-height: 0;
+}
     .group-expanded .group-content {
-      max-height: 500px; /* 足够容纳多个卫星项 */
+      max-height: 18000px;
     }
     .group-toggle {
       font-size: 10px;
       transition: transform 0.2s ease;
+      margin-right: 5px;
     }
     .group-collapsed .group-toggle {
       transform: rotate(-90deg);
@@ -174,34 +205,35 @@
     .group-expanded .group-toggle {
       transform: rotate(0);
     }
-
-    /* 卫星列表样式 */
-    .satellite-list {
-      border-top: 1px solid #444;
-      padding-top: 15px;
-    }
-    .list-title {
-      margin: 0 0 10px 0;
-      font-size: 13px;
+    .group-count {
+      font-size: 11px;
       color: #ccc;
+      background: rgba(50, 50, 50, 0.7);
+      padding: 0 5px;
+      border-radius: 8px;
+    }
+    .group-control {
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
     .satellite-item {
       display: flex;
       align-items: center;
-      padding: 6px 8px;
-      margin-bottom: 5px;
-      border-radius: 4px;
+      padding: 5px 8px;
+      margin: 0 0 4px 45px;
+      border-radius: 3px;
       background: rgba(60, 60, 60, 0.5);
       cursor: pointer;
       transition: background 0.2s;
-      width: calc(100% - 16px);
+      font-size: 12px;
     }
     .satellite-item:hover {
       background: rgba(80, 80, 80, 0.7);
     }
     .satellite-item .visibility-indicator {
-      width: 14px;
-      height: 14px;
+      width: 12px;
+      height: 12px;
       border: 1px solid #aaa;
       border-radius: 2px;
       margin-right: 8px;
@@ -215,11 +247,10 @@
     }
     .satellite-item.visible .visibility-indicator::after {
       content: "✓";
-      font-size: 10px;
+      font-size: 9px;
       color: white;
     }
     .satellite-item .name {
-      font-size: 12px;
       flex: 1;
     }
   </style>
@@ -251,15 +282,9 @@
         </div>
       </div>
       
-      <div class="satellite-list">
-       <!-- 卫星列表标题，将通过JS动态更新数量 -->
-        <h4 class="list-title" id="satelliteListTitle">卫星列表</h4>
-        <div id="satelliteItemsContainer"></div>
-              <!-- 卫星分组容器 -->
+      <!-- 卫星分组容器 -->
       <div class="satellite-groups" id="satelliteGroupsContainer">
         <!-- 分组内容将通过JS动态生成 -->
-      </div>
-
       </div>
     </div>
   </div>
@@ -277,7 +302,7 @@
 
     // 全局状态管理
     const state = {
-      groups: {}, // 存储分组信息 { 组名: { satellites: [], element: DOM元素 } }
+      constellations: {}, // 存储星座及内部分组结构
       satellites: [],          // 存储所有卫星数据
       globalShowOrbits: true,  // 全局轨道显示状态
       globalShowLabels: true   // 全局名称显示状态
@@ -285,8 +310,6 @@
 
     // DOM元素引用
     const satelliteGroupsContainer = document.getElementById("satelliteGroupsContainer");
-    const satelliteItemsContainer = document.getElementById("satelliteItemsContainer");
-    const satelliteListTitle = document.getElementById("satelliteListTitle"); // 新增：卫星列表标题元素
     const toggleAllOrbits = document.getElementById("toggleAllOrbits");
     const toggleAllLabels = document.getElementById("toggleAllLabels");
     const toggleEarthRotate = document.getElementById("toggleEarthRotate");
@@ -355,68 +378,584 @@
      * 确定卫星所属分组
      * 根据卫星名称特征进行分组
      */
-    function getSatelliteGroup(satelliteName) {
+    function getConstellation(satelliteName) {
       const name = satelliteName.toLowerCase();
       if (name.includes('gps')) return 'GPS卫星';
       if (name.includes('noaa')) return 'NOAA卫星';
+      if (name.includes('starlink')) return 'Starlink卫星';
       if (name.includes('iss') || name.includes('zarya')) return '国际空间站';
       if (name.includes('hst') || name.includes('hubble')) return '哈勃望远镜';
-      if (name.includes('glonass')) return '格洛纳斯卫星';
+      if (name.includes('cosmos')) return '格洛纳斯卫星';
+      if (name.includes('galileo')) return '伽利略卫星';
+      if (name.includes('qzss')) return '日本准天顶卫星';
+      if (name.includes('irnss')) return '印度导航卫星';
       if (name.includes('beidou-2') || name.includes('compass')) return '北斗2卫星';
       if (name.includes('beidou-3 ') || name.includes('compass')) return '北斗3卫星';
       return '其他卫星'; // 未匹配到的卫星归入其他组
     }
 
     /**
-     * 创建分组容器
+     * 从TLE数据解析轨道参数
      */
-    function createGroup(groupName) {
-      // 如果分组已存在则直接返回
-      if (state.groups[groupName]) return state.groups[groupName].element;
-
-      // 创建分组元素
-      const groupElement = document.createElement('div');
-      groupElement.className = 'satellite-group group-expanded'; // 默认展开
-      groupElement.innerHTML = `
-        <div class="group-title">
-          <span>${groupName}</span>
-          <span class="group-count">0</span>
-          <span class="group-toggle">▸</span>
-        </div>
-        <div class="group-content"></div>
-      `;
-
-      // 分组折叠/展开功能
-      const titleElement = groupElement.querySelector('.group-title');
-      titleElement.addEventListener('click', (e) => {
-        // 点击标题文字或计数时才切换折叠状态，点击卫星项不触发
-        if (e.target.classList.contains('group-title') || 
-            e.target.classList.contains('group-count') ||
-            e.target.classList.contains('group-toggle')) {
-          groupElement.classList.toggle('group-expanded');
-          groupElement.classList.toggle('group-collapsed');
-        }
-      });
-
-      // 存储分组信息
-      state.groups[groupName] = {
-        satellites: [],
-        element: groupElement,
-        countElement: groupElement.querySelector('.group-count')
+    function getOrbitParameters(satrec) {
+      // 轨道周期（分钟）
+      //const period = satrec.no ? (1440 / (satrec.no * 24 / 1.02759)) : 0;
+      const period = 2*Math.PI/satrec.no;
+      
+      // 轨道倾角（度）
+      const inclination = satrec.inclo / Math.PI * 180;
+      
+      // 升交点赤经（度）
+      const raan = satrec.nodeo / Math.PI * 180;
+      
+      return {
+        period,
+        inclination,
+        raan,
+        // 标准化RAAN（0-360度）
+        normalizedRaan: ((raan % 360) + 360) % 360
       };
-
-      // 添加到容器
-      satelliteGroupsContainer.appendChild(groupElement);
-      return groupElement;
     }
 
     /**
-     * 更新分组计数
+     * 第二步：星座内一级分组（轨道类型）
+     */
+    function getConstellationLevel1(constellationId, params) {
+      // 地球同步轨道周期约1436分钟（23小时56分）
+      const isGeosynchronous = Math.abs(params.period - 1436) < 60;
+      //console.log(params.period,params.period/60);
+      if (isGeosynchronous) {
+        if (params.inclination < 5) {
+          return { id: 'geo', name: '地球静止轨道 (GEO)' };
+        } else {
+          return { id: 'igso', name: '倾斜地球同步轨道 (IGSO)' };
+        }
+      } else if (params.period < 100) { // <20小时
+        return { id: 'leo', name: '低轨道 (LEO)' };
+      } else if (params.period < 1200){
+        return { id: 'meo', name: '中轨道 (MEO)'};
+      } else{
+        return { id: 'other', name: '其他轨道' };
+      }
+    }
+
+    /**
+     * 第三步：星座内二级分组（仅中低轨道需要）
+     * 按轨道倾角（相差<1度归为一类）
+     */
+    function getConstellationLevel2(constellationId, level1Id, params, existingGroups) {
+      // GEO/IGSO不细分二级分组
+      if (level1Id === 'geo' || level1Id === 'igso') {
+        return { id: 'none', name: '无需细分' };
+      }
+      //console.log("func getL2:",existingGroups);
+      
+      // 中低轨按倾角聚类（相差<1度）
+      const targetIncl = params.inclination;
+      for (const groupId in existingGroups) {
+        const incl = parseFloat(groupId.replace('incl_', ''));
+        if (Math.abs(incl - targetIncl) < 5) {
+          return {
+            id: groupId,
+            name: `轨道倾角: ${incl.toFixed(0)}°`
+          };
+        }
+      }
+      
+      // 创建新分组
+      const inclStr = targetIncl.toFixed(0);
+      return {
+        id: `incl_${inclStr}`,
+        name: `轨道倾角: ${inclStr}°`
+      };
+    }
+
+    /**
+     * 第四步：星座内三级分组（仅中低轨道需要）
+     * 按升交点赤经RAAN（相差<1度归为一个轨道面）
+     */
+    function getConstellationLevel3(constellationId, level1Id, level2Id, params, existingGroups) {
+      // GEO/IGSO不细分三级分组
+      if (level1Id === 'geo' || level1Id === 'igso') {
+        return { id: 'none', name: '无需细分' };
+      }
+      
+      // 中低轨按RAAN聚类（相差<1度）
+      const targetRaan = params.normalizedRaan;
+      for (const groupId in existingGroups) {
+        const raan = parseFloat(groupId.replace('raan_', ''));
+        if (Math.abs(raan - targetRaan) < 10) {
+          return {
+            id: groupId,
+            name: `轨道面 (RAAN: ${raan.toFixed(0)}°)`
+          };
+        }
+      }
+      
+      // 创建新分组
+      const raanStr = targetRaan.toFixed(0);
+      return {
+        id: `raan_${raanStr}`,
+        name: `轨道面 (RAAN: ${raanStr}°)`
+      };
+    }
+
+    /**
+     * 创建完整分组结构：星座 → 轨道类型 → 倾角 → 轨道面
+     */
+    function createGroupStructure(satellite) {
+      const { constellation, level1, level2, level3, params } = satellite;
+      //console.log(constellation,level1,level2);
+      
+      // 1. 初始化星座分组
+      if (!state.constellations[constellation]) {
+        const constelElement = document.createElement('div');
+        constelElement.className = 'constellation-group group-expanded';
+        const switchId = `constel_${constellation}`;
+        
+        constelElement.innerHTML = `
+          <div class="constellation-header">
+            <span class="group-toggle">▸</span>
+            <span>${constellation}</span>
+            <span class="group-count">0</span>
+            <div class="group-control">
+              <input type="checkbox" id="${switchId}" class="toggle-switch" checked>
+              <label for="${switchId}"></label>
+            </div>
+          </div>
+          <div class="group-content"></div>
+        `;
+        
+        // 星座折叠/展开
+        const header = constelElement.querySelector('.constellation-header');
+        header.addEventListener('click', (e) => {
+          if (!e.target.closest('.group-control')) {
+            constelElement.classList.toggle('group-expanded');
+            constelElement.classList.toggle('group-collapsed');
+          }
+        });
+        
+        // 星座显隐控制
+        const toggle = constelElement.querySelector('.toggle-switch');
+        toggle.addEventListener('change', (e) => {
+          toggleConstellationSatellites(constellation, e.target.checked);
+        });
+        
+        state.constellations[constellation] = {
+          name: constellation,
+          element: constelElement,
+          countElement: constelElement.querySelector('.group-count'),
+          toggleElement: toggle,
+          level1Groups: {}
+        };
+        
+        satelliteGroupsContainer.appendChild(constelElement);
+      }
+      
+      const constellationGroup = state.constellations[constellation];
+      
+      // 2. 初始化星座内一级分组（轨道类型）
+      if (!constellationGroup.level1Groups[level1.id]) {
+        const level1Element = document.createElement('div');
+        level1Element.className = 'level-1-group group-expanded';
+        const switchId = `level1_${constellation}_${level1.id}`;
+        
+        level1Element.innerHTML = `
+          <div class="level-1-header">
+            <span class="group-toggle">▸</span>
+            <span>${level1.name}</span>
+            <span class="group-count">0</span>
+            <div class="group-control">
+              <input type="checkbox" id="${switchId}" class="toggle-switch" checked>
+              <label for="${switchId}"></label>
+            </div>
+          </div>
+          <div class="group-content"></div>
+        `;
+        
+        // 一级分组折叠/展开
+        const header = level1Element.querySelector('.level-1-header');
+        header.addEventListener('click', (e) => {
+          if (!e.target.closest('.group-control')) {
+            level1Element.classList.toggle('group-expanded');
+            level1Element.classList.toggle('group-collapsed');
+          }
+        });
+        
+        // 一级分组显隐控制
+        const toggle = level1Element.querySelector('.toggle-switch');
+        toggle.addEventListener('change', (e) => {
+          toggleLevel1Satellites(constellation, level1.id, e.target.checked);
+        });
+        
+        constellationGroup.level1Groups[level1.id] = {
+          name: level1.name,
+          id:level1.id,
+          element: level1Element,
+          countElement: level1Element.querySelector('.group-count'),
+          toggleElement: toggle,
+          level2Groups: {}
+        };
+        
+        constellationGroup.element.querySelector('.group-content').appendChild(level1Element);
+      }
+      
+      const level1Group = constellationGroup.level1Groups[level1.id];
+      
+      // GEO/IGSO不创建二级和三级分组
+      if (level1.id === 'geo' || level1.id === 'igso') {
+        // 将卫星直接添加到一级分组
+        if (!level1Group.satellites) level1Group.satellites = [];
+        level1Group.satellites.push(satellite.name);
+        updateGroupCounts();
+        return level1Group.element.querySelector('.group-content');
+      }
+      
+      // 3. 初始化星座内二级分组（倾角）
+      if (!level1Group.level2Groups[level2.id]) {
+        const level2Element = document.createElement('div');
+        level2Element.className = 'level-2-group group-expanded';
+        const switchId = `level2_${constellation}_${level1.id}_${level2.id}`;
+        
+        level2Element.innerHTML = `
+          <div class="level-2-header">
+            <span class="group-toggle">▸</span>
+            <span>${level2.name}</span>
+            <span class="group-count">0</span>
+            <div class="group-control">
+              <input type="checkbox" id="${switchId}" class="toggle-switch" checked>
+              <label for="${switchId}"></label>
+            </div>
+          </div>
+          <div class="group-content"></div>
+        `;
+        
+        // 二级分组折叠/展开
+        const header = level2Element.querySelector('.level-2-header');
+        header.addEventListener('click', (e) => {
+          if (!e.target.closest('.group-control')) {
+            level2Element.classList.toggle('group-expanded');
+            level2Element.classList.toggle('group-collapsed');
+          }
+        });
+        
+        // 二级分组显隐控制
+        const toggle = level2Element.querySelector('.toggle-switch');
+        toggle.addEventListener('change', (e) => {
+          toggleLevel2Satellites(constellation, level1.id, level2.id, e.target.checked);
+        });
+        
+        level1Group.level2Groups[level2.id] = {
+          name: level2.name,
+          id: level2.id,
+          element: level2Element,
+          countElement: level2Element.querySelector('.group-count'),
+          toggleElement: toggle,
+          level3Groups: {}
+        };
+        
+        level1Group.element.querySelector('.group-content').appendChild(level2Element);
+      }
+      
+      const level2Group = level1Group.level2Groups[level2.id];
+      
+      // 4. 初始化星座内三级分组（轨道面）
+      if (!level2Group.level3Groups[level3.id]) {
+        const level3Element = document.createElement('div');
+        level3Element.className = 'level-3-group group-expanded';
+        const switchId = `level3_${constellation}_${level1.id}_${level2.id}_${level3.id}`;
+        
+        level3Element.innerHTML = `
+          <div class="level-3-header">
+            <span class="group-toggle">▸</span>
+            <span>${level3.name}</span>
+            <span class="group-count">0</span>
+            <div class="group-control">
+              <input type="checkbox" id="${switchId}" class="toggle-switch" checked>
+              <label for="${switchId}"></label>
+            </div>
+          </div>
+          <div class="group-content"></div>
+        `;
+        
+        // 三级分组折叠/展开
+        const header = level3Element.querySelector('.level-3-header');
+        header.addEventListener('click', (e) => {
+          if (!e.target.closest('.group-control')) {
+            level3Element.classList.toggle('group-expanded');
+            level3Element.classList.toggle('group-collapsed');
+          }
+        });
+        
+        // 三级分组显隐控制
+        const toggle = level3Element.querySelector('.toggle-switch');
+        toggle.addEventListener('change', (e) => {
+          toggleLevel3Satellites(constellation, level1.id, level2.id, level3.id, e.target.checked);
+        });
+        
+        level2Group.level3Groups[level3.id] = {
+          name: level3.name,
+          id: level3.id,
+          element: level3Element,
+          countElement: level3Element.querySelector('.group-count'),
+          toggleElement: toggle,
+          satellites: []
+        };
+        
+        level2Group.element.querySelector('.group-content').appendChild(level3Element);
+      }
+      
+      // 将卫星添加到三级分组
+      const level3Group = level2Group.level3Groups[level3.id];
+      level3Group.satellites.push(satellite.name);
+      
+      // 更新各级计数
+      updateGroupCounts();
+      
+      return level3Group.element.querySelector('.group-content');
+    }
+
+    /**
+     * 更新所有分组的计数
      */
     function updateGroupCounts() {
-      Object.values(state.groups).forEach(group => {
-        group.countElement.textContent = group.satellites.length;
+      // 遍历所有星座
+      Object.values(state.constellations).forEach(constellation => {
+        let constelCount = 0;
+        
+        // 遍历星座内一级分组
+        Object.values(constellation.level1Groups).forEach(level1 => {
+          let level1Count = 0;
+          // GEO/IGSO直接统计一级分组内的卫星
+          if (level1.id === 'geo' || level1.id === 'igso') {
+            level1Count = level1.satellites?.length || 0;
+            level1.countElement.textContent = level1Count;
+            constelCount += level1Count;
+            return;
+          }
+          
+          // 中低轨统计二级分组
+          Object.values(level1.level2Groups).forEach(level2 => {
+            let level2Count = 0;
+            
+            // 统计三级分组
+            Object.values(level2.level3Groups).forEach(level3 => {
+              const count = level3.satellites.length;
+              level3.countElement.textContent = count;
+              level2Count += count;
+            });
+            
+            level2.countElement.textContent = level2Count;
+            level1Count += level2Count;
+          });
+          
+          level1.countElement.textContent = level1Count;
+          constelCount += level1Count;
+        });
+        
+        constellation.countElement.textContent = constelCount;
       });
+    }
+
+    /**
+     * 切换整个星座的卫星显隐
+     */
+    function toggleConstellationSatellites(constellationId, isVisible) {
+      const constellation = state.constellations[constellationId];
+      if (!constellation) return;
+      
+      // 遍历星座内所有一级分组
+      Object.values(constellation.level1Groups).forEach(level1 => {
+        // GEO/IGSO直接处理一级分组内卫星
+        if (level1.id === 'geo' || level1.id === 'igso') {
+          level1.satellites?.forEach(satName => {
+            updateSatelliteVisibilityByName(satName, isVisible);
+          });
+          level1.toggleElement.checked = isVisible;
+          return;
+        }
+        
+        // 处理中低轨的二级和三级分组
+        Object.values(level1.level2Groups).forEach(level2 => {
+          Object.values(level2.level3Groups).forEach(level3 => {
+            level3.satellites.forEach(satName => {
+              updateSatelliteVisibilityByName(satName, isVisible);
+            });
+            level3.toggleElement.checked = isVisible;
+          });
+          level2.toggleElement.checked = isVisible;
+        });
+        level1.toggleElement.checked = isVisible;
+      });
+    }
+
+    /**
+     * 切换星座内一级分组的卫星显隐
+     */
+    function toggleLevel1Satellites(constellationId, level1Id, isVisible) {
+      const constellation = state.constellations[constellationId];
+      if (!constellation) return;
+      
+      const level1 = constellation.level1Groups[level1Id];
+      if (!level1) return;
+      // GEO/IGSO直接处理一级分组内卫星
+      if (level1.id === 'geo' || level1.id === 'igso') {
+        level1.satellites?.forEach(satName => {
+          updateSatelliteVisibilityByName(satName, isVisible);
+        });
+        level1.toggleElement.checked = isVisible;
+        syncConstellationToggleState(constellationId);
+        return;
+      }
+      
+      // 处理中低轨的二级和三级分组
+      Object.values(level1.level2Groups).forEach(level2 => {
+        Object.values(level2.level3Groups).forEach(level3 => {
+          level3.satellites.forEach(satName => {
+            updateSatelliteVisibilityByName(satName, isVisible);
+          });
+          level3.toggleElement.checked = isVisible;
+        });
+        level2.toggleElement.checked = isVisible;
+      });
+      
+      syncConstellationToggleState(constellationId);
+    }
+
+    /**
+     * 切换星座内二级分组的卫星显隐
+     */
+    function toggleLevel2Satellites(constellationId, level1Id, level2Id, isVisible) {
+      const constellation = state.constellations[constellationId];
+      if (!constellation) return;
+      
+      const level1 = constellation.level1Groups[level1Id];
+      if (!level1) return;
+      
+      const level2 = level1.level2Groups[level2Id];
+      if (!level2) return;
+      
+      // 处理三级分组
+      Object.values(level2.level3Groups).forEach(level3 => {
+        level3.satellites.forEach(satName => {
+          updateSatelliteVisibilityByName(satName, isVisible);
+        });
+        level3.toggleElement.checked = isVisible;
+      });
+      
+      syncLevel1ToggleState(constellationId, level1Id);
+      syncConstellationToggleState(constellationId);
+    }
+
+    /**
+     * 切换星座内三级分组的卫星显隐
+     */
+    function toggleLevel3Satellites(constellationId, level1Id, level2Id, level3Id, isVisible) {
+      const constellation = state.constellations[constellationId];
+      if (!constellation) return;
+      
+      const level1 = constellation.level1Groups[level1Id];
+      if (!level1) return;
+      
+      const level2 = level1.level2Groups[level2Id];
+      if (!level2) return;
+      
+      const level3 = level2.level3Groups[level3Id];
+      if (!level3) return;
+      
+      // 更新卫星状态
+      level3.satellites.forEach(satName => {
+        updateSatelliteVisibilityByName(satName, isVisible);
+      });
+      level3.toggleElement.checked = isVisible;
+      
+      syncLevel2ToggleState(constellationId, level1Id, level2Id);
+      syncLevel1ToggleState(constellationId, level1Id);
+      syncConstellationToggleState(constellationId);
+    }
+
+    /**
+     * 按名称更新卫星可见性
+     */
+    function updateSatelliteVisibilityByName(satName, isVisible) {
+      const satellite = state.satellites.find(s => s.name === satName);
+      if (satellite) {
+        satellite.isVisible = isVisible;
+        satellite.listItem.classList.toggle('visible', isVisible);
+        updateSatelliteVisibility(satellite);
+      }
+    }
+
+    /**
+     * 同步二级分组开关状态
+     */
+    function syncLevel2ToggleState(constellationId, level1Id, level2Id) {
+      const constellation = state.constellations[constellationId];
+      if (!constellation) return;
+      
+      const level1 = constellation.level1Groups[level1Id];
+      if (!level1) return;
+      
+      const level2 = level1.level2Groups[level2Id];
+      if (!level2) return;
+      
+      const level3Groups = Object.values(level2.level3Groups);
+      const allChecked = level3Groups.every(g => g.toggleElement.checked);
+      const allUnchecked = level3Groups.every(g => !g.toggleElement.checked);
+      
+      if (allChecked) level2.toggleElement.checked = true;
+      else if (allUnchecked) level2.toggleElement.checked = false;
+    }
+
+    /**
+     * 同步一级分组开关状态
+     */
+    function syncLevel1ToggleState(constellationId, level1Id) {
+      const constellation = state.constellations[constellationId];
+      if (!constellation) return;
+      
+      const level1 = constellation.level1Groups[level1Id];
+      if (!level1) return;
+      
+      // GEO/IGSO处理方式
+      if (level1.id === 'geo' || level1.id === 'igso') {
+        const allVisible = level1.satellites?.every(satName => {
+          const sat = state.satellites.find(s => s.name === satName);
+          return sat?.isVisible;
+        }) || false;
+        
+        const allHidden = level1.satellites?.every(satName => {
+          const sat = state.satellites.find(s => s.name === satName);
+          return !sat?.isVisible;
+        }) || false;
+        
+        if (allVisible) level1.toggleElement.checked = true;
+        else if (allHidden) level1.toggleElement.checked = false;
+        return;
+      }
+      
+      // 中低轨处理方式
+      const level2Groups = Object.values(level1.level2Groups);
+      const allChecked = level2Groups.every(g => g.toggleElement.checked);
+      const allUnchecked = level2Groups.every(g => !g.toggleElement.checked);
+      
+      if (allChecked) level1.toggleElement.checked = true;
+      else if (allUnchecked) level1.toggleElement.checked = false;
+    }
+
+    /**
+     * 同步星座开关状态
+     */
+    function syncConstellationToggleState(constellationId) {
+      const constellation = state.constellations[constellationId];
+      if (!constellation) return;
+      
+      const level1Groups = Object.values(constellation.level1Groups);
+      const allChecked = level1Groups.every(g => g.toggleElement.checked);
+      const allUnchecked = level1Groups.every(g => !g.toggleElement.checked);
+      
+      if (allChecked) constellation.toggleElement.checked = true;
+      else if (allUnchecked) constellation.toggleElement.checked = false;
     }
 
     /**
@@ -456,7 +995,8 @@
      * @returns {Cesium.Cartesian3[]} 轨道点数组
      */
     function precomputeOrbit(satrec) {
-      const points = 5;
+      //console.log(satrec.ecco);
+      const points = satrec.ecco>0.1?50:5;
       const period =  2*Math.PI/satrec.no*60*1000;
       const orbitPoints = [];
       const startTime = new Date();
@@ -486,9 +1026,25 @@
         const satrec = satellite.twoline2satrec(tle.line1, tle.line2);
         if (satrec.error) throw new Error(satrec.error);
 
+        // 1. 确定星座
+        const constellation = getConstellation(tle.name);
+        
+        // 2. 获取轨道参数
+        const params = getOrbitParameters(satrec);
+        
+        // 3. 确定星座内一级分组（轨道类型）
+        const level1 = getConstellationLevel1(constellation, params);
+
+        // 4. 确定星座内二级分组（倾角）
+        const existingLevel2Groups = state.constellations[constellation]?.level1Groups[level1.id]?.level2Groups || {};
+        const level2 = getConstellationLevel2(constellation, level1.id, params, existingLevel2Groups);
+        
+        // 5. 确定星座内三级分组（轨道面）
+        const existingLevel3Groups = state.constellations[constellation]?.level1Groups[level1.id]?.level2Groups[level2.id]?.level3Groups || {};
+        const level3 = getConstellationLevel3(constellation, level1.id, level2.id, params, existingLevel3Groups);
+
         // 预计算轨道
         const eciOrbit = precomputeOrbit(satrec);
-        //console.log("orbit size:",eciOrbit);
         
         // 生成随机颜色（区分不同卫星）
         const color = Cesium.Color.fromRandom({
@@ -538,41 +1094,18 @@
           show: true
         });
 
-        /*// 创建列表项
-        const listItem = document.createElement("div");
-        listItem.className = "satellite-item visible";
-        listItem.innerHTML = `
-          <span class="visibility-indicator"></span>
-          <span class="name">${tle.name}</span>
-        `;
-        listItem.dataset.name = tle.name;
-
-        // 列表项点击事件（切换单颗卫星显隐）
-        listItem.addEventListener("click", () => {
-          const isVisible = !listItem.classList.contains("visible");
-          listItem.classList.toggle("visible", isVisible);
-          
-          // 更新卫星状态
-          const sat = state.satellites.find(s => s.name === tle.name);
-          if (sat) {
-            sat.isVisible = isVisible;
-            updateSatelliteVisibility(sat);
-          }
-        });
-
-        satelliteItemsContainer.appendChild(listItem);*/
         // 创建列表项
         const listItem = document.createElement("div");
         listItem.className = "satellite-item visible";
         listItem.innerHTML = `
           <span class="visibility-indicator"></span>
-          <span class="name">${tle.name}</span>
+          <span class="name">${tle.name} (周期: ${params.period.toFixed(1)}分钟)</span>
         `;
         listItem.dataset.name = tle.name;
 
-        // 卫星项点击事件（切换显隐）
+        // 卫星项点击事件
         listItem.addEventListener("click", (e) => {
-          e.stopPropagation(); // 防止触发分组折叠
+          e.stopPropagation();
           const isVisible = !listItem.classList.contains("visible");
           listItem.classList.toggle("visible", isVisible);
           
@@ -580,23 +1113,37 @@
           if (satellite) {
             satellite.isVisible = isVisible;
             updateSatelliteVisibility(satellite);
+            
+            // 同步各级开关状态
+            if (level1.id === 'geo' || level1.id === 'igso') {
+              syncLevel1ToggleState(constellation, level1.id);
+            } else {
+              syncLevel3ToggleState(constellation, level1.id, level2.id, level3.id);
+              syncLevel2ToggleState(constellation, level1.id, level2.id);
+              syncLevel1ToggleState(constellation, level1.id);
+            }
+            syncConstellationToggleState(constellation);
           }
         });
 
-        // 确定分组并添加到对应分组
-        const groupName = getSatelliteGroup(tle.name);
-        console.log(groupName);
-        const groupElement = createGroup(groupName);
-        const groupContent = groupElement.querySelector('.group-content');
-        groupContent.appendChild(listItem);
+        // 将卫星添加到分组结构
+        const parentContainer = createGroupStructure({
+          name: tle.name,
+          constellation,
+          level1,
+          level2,
+          level3,
+          params
+        });
+        parentContainer.appendChild(listItem);
 
-        // 添加到分组数据
-        state.groups[groupName].satellites.push(tle.name);
-        updateGroupCounts();
-
-        // 存储卫星数据
         return {
           name: tle.name,
+          constellation,
+          level1,
+          level2,
+          level3,
+          params,
           satrec,
           eciOrbit,
           orbitPrimitive,
@@ -609,6 +1156,37 @@
         console.error(`创建卫星${tle.name}失败:`, error);
         return null;
       }
+    }
+
+    /**
+     * 同步三级分组开关状态
+     */
+    function syncLevel3ToggleState(constellationId, level1Id, level2Id, level3Id) {
+      const constellation = state.constellations[constellationId];
+      if (!constellation) return;
+      
+      const level1 = constellation.level1Groups[level1Id];
+      if (!level1) return;
+      
+      const level2 = level1.level2Groups[level2Id];
+      if (!level2) return;
+      
+      const level3 = level2.level3Groups[level3Id];
+      if (!level3) return;
+      
+      // 检查该组所有卫星状态
+      const allVisible = level3.satellites.every(satName => {
+        const sat = state.satellites.find(s => s.name === satName);
+        return sat?.isVisible;
+      });
+      
+      const allHidden = level3.satellites.every(satName => {
+        const sat = state.satellites.find(s => s.name === satName);
+        return !sat?.isVisible;
+      });
+      
+      if (allVisible) level3.toggleElement.checked = true;
+      else if (allHidden) level3.toggleElement.checked = false;
     }
 
     /**
@@ -661,7 +1239,7 @@
       // 初始化拖动功能
       initDragFunctionality();
       // 加载TLE数据
-      const tleList = await loadTLEFile("beidou.txt");
+      const tleList = await loadTLEFile("starlink.txt");//"gnss.txt");//"beidou.txt");
       if (tleList.length === 0) {
         console.error("未加载到有效TLE数据");
         return;
@@ -675,9 +1253,9 @@
             state.satellites.push(sat);
             validSatelliteCount++; // 只统计成功创建的卫星
         }
-        //console.log(sat.name);
       });
-    satelliteListTitle.textContent = `卫星列表(${validSatelliteCount})`;
+      console.log("total: ",validSatelliteCount);
+    //satelliteListTitle.textContent = `卫星列表(${validSatelliteCount})`;
 
       // 全局开关事件
       toggleAllOrbits.addEventListener("change", (e) => {
@@ -711,6 +1289,7 @@
 
     // 启动应用
     init();
+    //console.log(state);
   </script>
 </body>
 </html>
