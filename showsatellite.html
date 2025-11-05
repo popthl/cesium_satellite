@@ -487,16 +487,19 @@
         if (Math.abs(raan - targetRaan) < 10) {
           return {
             id: groupId,
-            name: `轨道面 (RAAN: ${raan.toFixed(0)}°)`
+            name: `轨道面 (RAAN: ${raan.toFixed(0)}°)`,
+            raanValue: raan // 存储RAAN值用于排序
           };
         }
       }
       
       // 创建新分组
       const raanStr = targetRaan.toFixed(0);
+      const raanValue = parseFloat(raanStr);
       return {
         id: `raan_${raanStr}`,
-        name: `轨道面 (RAAN: ${raanStr}°)`
+        name: `轨道面 (RAAN: ${raanStr}°)`,
+        raanValue: raanValue // 存储RAAN值用于排序
       };
     }
 
@@ -699,7 +702,8 @@
           element: level3Element,
           countElement: level3Element.querySelector('.group-count'),
           toggleElement: toggle,
-          satellites: []
+          satellites: [],
+          raanValue: level3.raanValue // 关键：保存RAAN值
         };
         
         level2Group.element.querySelector('.group-content').appendChild(level3Element);
@@ -714,7 +718,34 @@
       
       return level3Group.element.querySelector('.group-content');
     }
-
+    /**
+     * 新增：按RAAN值排序轨道面分组
+     */
+    function sortOrbitPlanes() {
+      // 遍历所有星座
+      Object.values(state.constellations).forEach(constellation => {
+        // 遍历星座内的一级分组（仅处理中低轨道）
+        Object.values(constellation.level1Groups).forEach(level1Group => {
+          if (level1Group.id === 'geo' || level1Group.id === 'igso') return; // 只排序中低轨的轨道面
+          
+          // 遍历二级分组（倾角）
+          Object.values(level1Group.level2Groups).forEach(level2Group => {
+            const level3Container = level2Group.element.querySelector('.group-content');
+            if (!level3Container) return;
+            
+            // 1. 获取当前二级分组下的所有轨道面分组，并按RAAN值排序
+            const sortedLevel3Groups = Object.values(level2Group.level3Groups)
+              .sort((a, b) => a.raanValue - b.raanValue); // 按RAAN从小到大排序
+            
+            // 2. 清空容器并按排序后的顺序重新添加轨道面
+            level3Container.innerHTML = '';
+            sortedLevel3Groups.forEach(level3Group => {
+              level3Container.appendChild(level3Group.element);
+            });
+          });
+        });
+      });
+    }
     /**
      * 更新所有分组的计数
      */
@@ -996,7 +1027,7 @@
      */
     function precomputeOrbit(satrec) {
       //console.log(satrec.ecco);
-      const points = satrec.ecco>0.1?50:5;
+      const points = satrec.ecco>0.1?500:5;
       const period =  2*Math.PI/satrec.no*60*1000;
       const orbitPoints = [];
       const startTime = new Date();
@@ -1239,7 +1270,7 @@
       // 初始化拖动功能
       initDragFunctionality();
       // 加载TLE数据
-      const tleList = await loadTLEFile("starlink.txt");//"gnss.txt");//"beidou.txt");
+      const tleList = await loadTLEFile("gnss.txt");//"starlink.txt");//"beidou.txt");
       if (tleList.length === 0) {
         console.error("未加载到有效TLE数据");
         return;
@@ -1256,6 +1287,8 @@
       });
       console.log("total: ",validSatelliteCount);
     //satelliteListTitle.textContent = `卫星列表(${validSatelliteCount})`;
+      // 关键：所有卫星加载完成后，对轨道面进行排序
+      sortOrbitPlanes();
 
       // 全局开关事件
       toggleAllOrbits.addEventListener("change", (e) => {
