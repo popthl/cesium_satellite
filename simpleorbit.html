@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cesium + Satellite.js 卫星轨道</title>
+  <link rel="stylesheet" href="https://unpkg.com/cesium@1.134/Build/Cesium/Widgets/widgets.css">
+  <script src="https://unpkg.com/cesium@1.134/Build/Cesium/Cesium.js"></script>
+  <script src="https://unpkg.com/satellite.js@5.0.0/dist/satellite.min.js"></script>
+  <style>
+    html, body, #cesiumContainer {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div id="cesiumContainer"></div>
+  <script>
+    // 1. 初始化Cesium
+    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI0NmM1M2YxNC01YWNmLTQzOTAtYmY4MC02YWVlNTE2NDM3ZDYiLCJpZCI6MjYxOTQzLCJpYXQiOjE3MzM5OTU2MjB9.5cQ0mYBL1o0OQVIbB4J0BjTAxc-NoOxwHgwpYtJP-K8';
+    window.CESIUM_BASE_URL = "https://unpkg.com/cesium@1.134/Build/Cesium/";
+    const viewer = new Cesium.Viewer("cesiumContainer", {
+      animation: true,
+      timeline: true,
+      sceneModePicker: true,
+      baseLayerPicker: true,
+    });
+
+    // 2. 卫星TLE数据（国际空间站）
+    //BEIDOU-3 IGSO-3 (C40)   
+    //const tleLine1 = "1 44709U 19073A   25307.34271062 -.00000197  00000+0  00000+0 0  9992";
+    //const tleLine2 = "2 44709  55.1930 283.3407 0044823 191.9688 167.8640  1.00255426 22190";
+    //QZS-1R (QZSS/PRN 196)   
+    //const tleLine1 = "1 49336U 21096A   25307.70830456 -.00000188  00000+0  00000+0 0  9999";
+    //const tleLine2 = "2 49336  36.9951  82.9396 0749679 270.5871  80.8267  1.00269922 14747";
+    //NVS-01 (IRNSS-1J)       
+    //const tleLine1 = "1 56759U 23076A   25307.99072242 -.00000324  00000+0  00000+0 0  9990";
+    //const tleLine2 = "2 56759   2.7183 252.9503 0007439 352.6527 284.2412  1.00268740  8856";
+    //BEIDOU-3 G4 (C62)       
+    //const tleLine1 = "1 56564U 23066A   25308.13944316 -.00000099  00000+0  00000+0 0  9999";
+    //const tleLine2 = "2 56564   0.9039 299.0414 0004368 226.9269  87.9047  1.00272083  9136";
+    //NVS-02 (IRNSS-1K)       
+    //const tleLine1 = "1 62850U 25020A   25307.94411771  .00000761  00000+0  39243-3 0  9998";
+    //const tleLine2 = "2 62850  21.0668 341.6507 7350968   1.0895   0.1135  2.17552549  6076";
+    //ISS
+    const tleLine1 = "1 25544U 98067A   23183.58444101  .00016717  00000+0  10270-3 0  9001";
+    const tleLine2 = "2 25544  51.6441  91.7658 0006792  17.6667 342.4822 15.49950901353222";
+    const satrec = satellite.twoline2satrec(tleLine1, tleLine2);
+
+    const currentTime = new Date();
+    const currentPos = satellite.propagate(satrec, currentTime).position;
+    const gmst = satellite.gstime(currentTime); // 计算格林尼治恒星时
+    const currentEcef = satellite.eciToEcf(currentPos, gmst);
+    viewer.entities.add({
+      position: new Cesium.Cartesian3(
+        currentEcef.x * 1000,
+        currentEcef.y * 1000,
+        currentEcef.z * 1000
+      ),
+      point: { pixelSize: 8, color: Cesium.Color.RED },
+      label: { text: "ISS", font: "14px sans-serif" },
+    });
+
+    // 3. 计算轨道点
+    const orbitPoints = [];
+    
+    for (let i = 0; i < 3000; i++) {
+      const time = new Date(currentTime.getTime() + i * 30 * 1000);
+      const eciPosition = satellite.propagate(satrec, time).position;
+      const gmst = satellite.gstime(time); // 计算格林尼治恒星时
+      const ecefPosition = satellite.eciToEcf(eciPosition, gmst);
+      orbitPoints.push(new Cesium.Cartesian3(
+        ecefPosition.x * 1000,
+        ecefPosition.y * 1000,
+        ecefPosition.z * 1000
+      ));
+    }
+
+    // 4. 绘制轨道和卫星
+    viewer.entities.add({
+      polyline: {
+        positions: orbitPoints,
+        width: 2,
+        material: Cesium.Color.YELLOW.withAlpha(0.8),
+        //clampToGround: true, // 关键修复：不贴地面
+        //classificationType: Cesium.ClassificationType.NONE // 2D模式重要
+      },
+    });
+
+    // 获取场景模式选择器
+/*const sceneModePicker = new Cesium.SceneModePickerViewModel({
+    scene: viewer.scene,
+    duration: 2.0
+});
+
+// 监听切换到2D模式
+sceneModePicker.morphTo2D.beforeExecute.addEventListener(() => {
+    console.log("即将切换到2D模式");
+});
+
+sceneModePicker.morphTo2D.afterExecute.addEventListener(function() {
+    console.log("已成功切换到2D模式");
+    // 在这里执行2D模式下的特殊处理
+    //handle2DModeActivation();
+});
+*/
+    //viewer.scene.farToNearRatio = 5000000000;
+    viewer.scene.preUpdate.addEventListener(() => {
+    const newMode = viewer.scene.mode;
+    if (newMode === Cesium.SceneMode.SCENE2D) { // 仅当模式变化时执行
+        //const cameraHeight = viewer.camera.positionCartographic.height;
+        //const minHeight = 38000000;
+        /*viewer.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees(0, 0, minHeight)
+            });
+            /*viewer.camera.setView({
+    destination: Cesium.Cartesian3.fromDegrees(104.0, 35.0, 50000000)
+});*/
+        //console.log("2D: ",viewer.camera.positionCartographic.height);
+        //const frustum = viewer.camera.frustum;
+        //frustum.width = 2000000; 
+        viewer.scene.camera.position.z=50000000;
+        /*viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees(0.0, 0.0, 50000000),
+    duration: 2.0
+});*/
+    
+    }
+  });
+    viewer.zoomTo(viewer.entities);
+  </script>
+</body>
+</html>
