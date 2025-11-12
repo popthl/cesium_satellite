@@ -1025,12 +1025,12 @@
      * @param {number} period - 轨道周期（毫秒）
      * @returns {Cesium.Cartesian3[]} 轨道点数组
      */
-    function precomputeOrbit(satrec) {
+    function precomputeOrbit(satrec,time) {
       //console.log(satrec.ecco);
       const points = satrec.ecco>0.1?500:5;
       const period =  2*Math.PI/satrec.no*60*1000;
       const orbitPoints = [];
-      const startTime = new Date();
+      const startTime = Cesium.JulianDate.toDate(time);;
       
       for (let i = 0; i < points; i++) {
         const time = new Date(startTime.getTime() + (i / points) * period);
@@ -1046,7 +1046,27 @@
       orbitPoints.push(orbitPoints[0]);
       return orbitPoints;
     }
-
+   function computeECFOrbit(satrec,time){
+      const startTime = Cesium.JulianDate.toDate(time);
+      const points = 300;
+      const period =  2*Math.PI/satrec.no*60*1000;
+      const orbitPoints = [];
+      for (let i = 0; i < points; i++) {
+        const time = new Date(startTime.getTime() + (i / points) * period);
+        const eciPosition = satellite.propagate(satrec, time).position;
+        const gmst = satellite.gstime(time); // 计算格林尼治恒星时
+        const position = satellite.eciToEcf(eciPosition, gmst);
+      
+        // 转换为米并存储
+        orbitPoints.push(Cesium.Cartesian3.fromElements(
+          position.x * 1000,
+          position.y * 1000,
+          position.z * 1000
+        ));
+      }
+      
+      return orbitPoints;
+    }
     /**
      * 3. 创建卫星实体和轨道
      * @param {Object} tle - TLE数据
@@ -1075,7 +1095,7 @@
         const level3 = getConstellationLevel3(constellation, level1.id, level2.id, params, existingLevel3Groups);
 
         // 预计算轨道
-        const eciOrbit = precomputeOrbit(satrec);
+        const eciOrbit = precomputeOrbit(satrec,viewer.clock.currentTime);
         
         // 生成随机颜色（区分不同卫星）
         const color = Cesium.Color.fromRandom({
@@ -1249,7 +1269,9 @@
         // 只更新可见卫星
         if (sat.isVisible) {
           // 更新轨道旋转
-          sat.orbitPrimitive.modelMatrix = rotationMatrix;
+          if(viewer.scene.mode === Cesium.SceneMode.SCENE3D){
+            sat.orbitPrimitive.modelMatrix = rotationMatrix;
+          }
 
           // 更新卫星位置（ECI -> ECF）
           const eciPos = satellite.propagate(sat.satrec, date).position;
@@ -1262,7 +1284,46 @@
         }
       });
     }
+    function updateOrbit(time){
+      state.satellites.forEach(sat => {
+        var orbitpoint;
+        if(viewer.scene.mode === Cesium.SceneMode.SCENE3D){
+          orbitpoint = precomputeOrbit(sat.satrec,time);
+        }else{
+          orbitpoint = computeECFOrbit(sat.satrec,time);
+        }
+        
+        
+        // 3. 创建新的轨道几何（使用新坐标点）
+  const newOrbitGeometry = new Cesium.PolylineGeometry({
+    positions: orbitpoint,  // 新坐标点数组
+    width: 1,                   // 线宽（保持不变或修改）
+    vertexFormat: Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
+  });
 
+  // 4. 创建新的几何实例
+  const newOrbitInstance = new Cesium.GeometryInstance({
+    geometry: newOrbitGeometry,
+    id: sat.name  // 保持与卫星关联的ID
+  });
+
+  // 5. 复用原有的外观样式（或创建新样式）
+  const newOrbitAppearance = sat.orbitPrimitive.appearance;  // 复用颜色等样式
+
+  // 6. 创建新的轨道图元
+  const newOrbitPrimitive = new Cesium.Primitive({
+    geometryInstances: newOrbitInstance,
+    appearance: newOrbitAppearance,
+    modelMatrix: Cesium.Matrix4.IDENTITY, // 保持坐标系转换矩阵
+    show: sat.orbitPrimitive.show                // 保持显隐状态
+  });
+
+  // 7. 将新图元添加到场景，并更新卫星对象的引用
+  viewer.scene.primitives.remove(sat.orbitPrimitive);
+  viewer.scene.primitives.add(newOrbitPrimitive);
+  sat.orbitPrimitive = newOrbitPrimitive; 
+      });
+    }
     /**
      * 初始化函数
      */
@@ -1270,7 +1331,7 @@
       // 初始化拖动功能
       initDragFunctionality();
       // 加载TLE数据
-      const tleList = await loadTLEFile("gnss.txt");//"starlink.txt");//"beidou.txt");
+      const tleList = await loadTLEFile("beidou.txt");//"starlink.txt");//"beidou.txt");
       if (tleList.length === 0) {
         console.error("未加载到有效TLE数据");
         return;
@@ -1313,7 +1374,37 @@
       viewer.clock.onTick.addEventListener(clock => {
         updateSatellites(clock.currentTime);
       });
-
+let currentMode = viewer.scene.mode;
+viewer.scene.morphComplete.addEventListener(() => {
+  // mode 表示切换后的视图模式：
+  // - Cesium.SceneMode.SCENE2D：2D视图
+  // - Cesium.SceneMode.SCENE3D：3D视图
+  // - Cesium.SceneMode.COLUMBUS_VIEW：哥伦布视图
+const newMode = viewer.scene.mode;
+  console.log("视图模式切换完成，当前模式：", newMode,currentMode);
+  if(newMode === Cesium.SceneMode.SCENE2D){//换到2D
+    viewer.scene.camera.position.z=50000000;
+    
+  }//else if(newMode === Cesium.SceneMode.SCENE3D){//转换回3D
+  if(currentMode === Cesium.SceneMode.SCENE3D || newMode === Cesium.SceneMode.SCENE3D){
+    updateOrbit(viewer.clock.currentTime);
+  }
+  //}
+  
+  currentMode = newMode;
+});
+      /*viewer.scene.preUpdate.addEventListener(() => {
+        const newMode = viewer.scene.mode;
+        if (newMode !== currentMode) {
+          if(newMode === Cesium.SceneMode.SCENE2D){
+            console.log("2D",viewer.scene.camera.position.z);
+            viewer.scene.camera.position.z=50000000;
+            //state.satellites.forEach(sat => {sat.orbitPrimitive.modelMatrix =Cesium.Matrix4.IDENTITY;});
+            updateOrbit(viewer.clock.currentTime);
+          }
+          currentMode = newMode;
+        }
+      });*/
       // 初始视角
       /*if (state.satellites.length > 0) {
         viewer.zoomTo(state.satellites[0].satelliteEntity, new Cesium.HeadingPitchRange(0, -0.5, 10000000));
