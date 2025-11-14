@@ -1036,6 +1036,12 @@
         const time = new Date(startTime.getTime() + (i / points) * period);
         const position = satellite.propagate(satrec, time).position;
         
+        const isNumber = (val) => typeof val === 'number' && !isNaN(val) && isFinite(val);
+        if(!(isNumber(position.x)&&isNumber(position.y)&&isNumber(position.z))){
+          console.log(satrec.satnum,"propagate error");
+          return orbitPoints;
+        }
+        
         // 转换为米并存储
         orbitPoints.push(Cesium.Cartesian3.fromElements(
           position.x * 1000,
@@ -1054,6 +1060,12 @@
       for (let i = 0; i < points; i++) {
         const time = new Date(startTime.getTime() + (i / points) * period);
         const eciPosition = satellite.propagate(satrec, time).position;
+        const isNumber = (val) => typeof val === 'number' && !isNaN(val) && isFinite(val);
+        if(!(isNumber(eciPosition.x)&&isNumber(eciPosition.y)&&isNumber(eciPosition.z))){
+          console.log(satrec.satnum,"propagate error");
+          return orbitPoints;
+        }
+
         const gmst = satellite.gstime(time); // 计算格林尼治恒星时
         const position = satellite.eciToEcf(eciPosition, gmst);
       
@@ -1095,7 +1107,7 @@
         const level3 = getConstellationLevel3(constellation, level1.id, level2.id, params, existingLevel3Groups);
 
         // 预计算轨道
-        const eciOrbit = precomputeOrbit(satrec,viewer.clock.currentTime);
+        //const eciOrbit = precomputeOrbit(satrec,viewer.clock.currentTime);
         
         // 生成随机颜色（区分不同卫星）
         const color = Cesium.Color.fromRandom({
@@ -1105,7 +1117,7 @@
           alpha: 0.8
         });
 
-        // 创建轨道Primitive
+        /*// 创建轨道Primitive
         const orbitGeometry = new Cesium.PolylineGeometry({
           positions: eciOrbit,
           width: 1,
@@ -1124,7 +1136,7 @@
           modelMatrix: Cesium.Matrix4.IDENTITY,
           show: true
         });
-        viewer.scene.primitives.add(orbitPrimitive);
+        viewer.scene.primitives.add(orbitPrimitive);*/
 
         // 创建卫星点实体
         const satelliteEntity = viewer.entities.add({
@@ -1196,8 +1208,8 @@
           level3,
           params,
           satrec,
-          eciOrbit,
-          orbitPrimitive,
+          eciOrbit:null,
+          orbitPrimitive:null,
           satelliteEntity,
           listItem,
           isVisible: true,
@@ -1208,7 +1220,81 @@
         return null;
       }
     }
+/**
+ * 为单颗卫星创建轨道（原轨道创建逻辑抽离）
+ */
+function createSatelliteOrbit(sat,time,rotationMatrix) {
+  try {
+    // 预计算轨道点（这一步最耗时，放在分批处理中）
+    const eciOrbit = precomputeOrbit(sat.satrec,time);// 点数可减少至200
+    sat.eciOrbit = eciOrbit;
+    //console.log(sat.name,time,eciOrbit.length);
 
+    // 创建轨道几何和图元
+    const orbitGeometry = new Cesium.PolylineGeometry({
+      positions: eciOrbit,
+      width: 1,
+      vertexFormat: Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
+    });
+    const orbitInstance = new Cesium.GeometryInstance({
+      geometry: orbitGeometry,
+      id: sat.name
+    });
+    const orbitAppearance = new Cesium.PolylineMaterialAppearance({
+      material: Cesium.Material.fromType(Cesium.Material.ColorType, { color: sat.color })
+    });
+    const orbitPrimitive = new Cesium.Primitive({
+      geometryInstances: orbitInstance,
+      appearance: orbitAppearance,
+      modelMatrix: rotationMatrix,
+      show: sat.isVisible && state.globalShowOrbits
+    });
+
+    // 添加到场景并更新卫星对象
+    viewer.scene.primitives.add(orbitPrimitive);
+    sat.orbitPrimitive = orbitPrimitive;
+  } catch (error) {
+    console.error(`创建${sat.name}轨道失败:`, error);
+  }
+}
+/**
+ * 分批次创建卫星轨道
+ * @param {Array} satellites - 所有卫星对象数组
+ * @param {number} batchSize - 每批创建的轨道数量（建议20~50）
+ * @param {number} delay - 批次间隔时间（毫秒，建议100~300）
+ */
+function createOrbitsInBatches(satellites, batchSize = 30, delay = 200) {
+  let index = 0; // 当前处理的卫星索引
+  const time =viewer.clock.currentTime;
+  const date = Cesium.JulianDate.toDate(time);
+  const gmst = satellite.gstime(date); // 计算格林尼治恒星时
+  const rotationMatrix = Cesium.Matrix4.fromRotation(
+    new Cesium.Matrix3.fromRotationZ(-gmst) // 地球自转矩阵
+  ); 
+  // 处理单批轨道创建
+  function processBatch() {
+    if (index >= satellites.length) {
+      console.log("所有轨道创建完成");
+      return; // 全部处理完，退出
+    }
+    console.log("batch: ",index," length: ",satellites.length);
+    // 计算当前批次的卫星范围
+    const end = Math.min(index + batchSize, satellites.length);
+    for (let i = index; i < end; i++) {
+      const sat = satellites[i];
+      if (!sat.orbitPrimitive) { // 跳过已创建轨道的卫星
+        createSatelliteOrbit(sat,time,rotationMatrix); // 为单颗卫星创建轨道
+      }
+    }
+
+    index = end; // 更新索引
+    // 延迟处理下一批，避免阻塞主线程
+    setTimeout(processBatch, delay);
+  }
+
+  // 启动第一批处理
+  processBatch();
+}
     /**
      * 同步三级分组开关状态
      */
@@ -1247,7 +1333,10 @@
     function updateSatelliteVisibility(sat) {
       const { isVisible } = sat;
       // 轨道可见性 = 自身可见 && 全局轨道开启
-      sat.orbitPrimitive.show = isVisible && state.globalShowOrbits;
+      if(sat.orbitPrimitive!==null){
+        sat.orbitPrimitive.show = isVisible && state.globalShowOrbits;
+      }
+      
       // 卫星点位可见性 = 自身可见
       sat.satelliteEntity.show = isVisible;
       // 标签可见性 = 自身可见 && 全局标签开启
@@ -1259,6 +1348,7 @@
      * @param {Cesium.JulianDate} time - 当前时间
      */
     function updateSatellites(time) {
+      //console.log("update: ",time);
       const date = Cesium.JulianDate.toDate(time);
       const gmst = satellite.gstime(date); // 计算格林尼治恒星时
       const rotationMatrix = Cesium.Matrix4.fromRotation(
@@ -1269,12 +1359,18 @@
         // 只更新可见卫星
         if (sat.isVisible) {
           // 更新轨道旋转
-          if(viewer.scene.mode === Cesium.SceneMode.SCENE3D){
+          if(viewer.scene.mode === Cesium.SceneMode.SCENE3D && sat.orbitPrimitive!==null){
             sat.orbitPrimitive.modelMatrix = rotationMatrix;
           }
 
           // 更新卫星位置（ECI -> ECF）
           const eciPos = satellite.propagate(sat.satrec, date).position;
+        const isNumber = (val) => typeof val === 'number' && !isNaN(val) && isFinite(val);
+        if(!(isNumber(eciPos.x)&&isNumber(eciPos.y)&&isNumber(eciPos.z))){
+          console.log(sat.name,"propagate error");
+          return;
+        }
+
           const ecfPos = satellite.eciToEcf(eciPos, gmst);
           sat.satelliteEntity.position = new Cesium.Cartesian3(
             ecfPos.x * 1000,
@@ -1336,7 +1432,11 @@
         console.error("未加载到有效TLE数据");
         return;
       }
-
+      let t0 = viewer.clock.currentTime;
+      let jdt0=Cesium.JulianDate.totalDays(t0);
+      var tt = new Cesium.JulianDate();
+      let t1 = Cesium.JulianDate.clone(t0,tt);
+      //console.log(t0,jdt0,t0.dayNumber+t0.secondsOfDay/86400);
       // 创建所有卫星并统计成功创建的数量
       let validSatelliteCount = 0;
       tleList.forEach(tle => {
@@ -1344,8 +1444,25 @@
         if (sat){
             state.satellites.push(sat);
             validSatelliteCount++; // 只统计成功创建的卫星
+            jdt0 = Cesium.JulianDate.totalDays(t0);
+            let dt = jdt0 - sat.satrec.jdsatepoch;
+            //console.log(jdt0,sat.satrec.jdsatepoch,dt);
+            tt = Cesium.JulianDate.clone(t0,tt);
+            Cesium.JulianDate.addSeconds(tt,-dt*86400+sat.params.period*60,tt);
+            //console.log("tt: ",tt);
+            if(validSatelliteCount===1){
+              Cesium.JulianDate.clone(tt,t1);
+            }else{
+              if(tt>t1){
+                Cesium.JulianDate.clone(tt,t1);
+              }
+            }
+            if(dt>0){
+              Cesium.JulianDate.addSeconds(t0,-dt*86400,t0);
+            }
         }
       });
+      console.log("t0: ",t0,"t1: ",t1);
       console.log("total: ",validSatelliteCount);
     //satelliteListTitle.textContent = `卫星列表(${validSatelliteCount})`;
       // 关键：所有卫星加载完成后，对轨道面进行排序
@@ -1370,10 +1487,32 @@
         state.satellites.forEach(sat => updateSatelliteVisibility(sat));
       });
       globeRotate.start();
-      // 监听时间变化，实时更新
+      viewer.clock.startTime = t0;
+      viewer.clock.stopTime = t1;
+      viewer.clock.currentTime = t0;
+      viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP;
+      viewer.timeline.zoomTo(t0,t1);
+      viewer.clock.shouldAnimate = false;
+      updateSatellites(t0);
+// 第二步：分批次创建轨道（初始化完成后开始）
+  setTimeout(() => {
+    createOrbitsInBatches(state.satellites, 30, 200); // 每批30个，间隔200ms
+  }, 500); // 延迟500ms，确保点和UI先加载完成
+  //updateSatellites(viewer.clock.currentTime);
+  //       // 监听时间变化，实时更新
       viewer.clock.onTick.addEventListener(clock => {
-        updateSatellites(clock.currentTime);
+        if(clock.shouldAnimate){
+          updateSatellites(clock.currentTime);
+        }
       });
+// 监听时间线手动调整（暂停时拖动时间线也会触发）
+viewer.timeline.addEventListener('settime', (event) => {
+  // 从事件对象的clock属性中获取当前时间
+  const currentTime = event.clock.currentTime;
+  if (currentTime) {
+    updateSatellites(currentTime);
+  }
+});
 let currentMode = viewer.scene.mode;
 viewer.scene.morphComplete.addEventListener(() => {
   // mode 表示切换后的视图模式：
