@@ -1208,7 +1208,7 @@
           level3,
           params,
           satrec,
-          eciOrbit:null,
+          epochOrbit:new Cesium.JulianDate(),
           orbitPrimitive:null,
           satelliteEntity,
           listItem,
@@ -1227,7 +1227,7 @@ function createSatelliteOrbit(sat,time,rotationMatrix) {
   try {
     // 预计算轨道点（这一步最耗时，放在分批处理中）
     const eciOrbit = precomputeOrbit(sat.satrec,time);// 点数可减少至200
-    sat.eciOrbit = eciOrbit;
+    sat.epochOrbit = time;
     //console.log(sat.name,time,eciOrbit.length);
 
     // 创建轨道几何和图元
@@ -1333,7 +1333,8 @@ function createOrbitsInBatches(satellites, batchSize = 30, delay = 200) {
   // 7. 将新图元添加到场景，并更新卫星对象的引用
   viewer.scene.primitives.remove(sat.orbitPrimitive);
   viewer.scene.primitives.add(newOrbitPrimitive);
-  sat.orbitPrimitive = newOrbitPrimitive; 
+  sat.orbitPrimitive = newOrbitPrimitive;
+  sat.epochOrbit = time;
       
     }
 /**
@@ -1438,6 +1439,23 @@ function updateOrbitsInBatches(satellites, batchSize = 30, delay = 200) {
           if(viewer.scene.mode === Cesium.SceneMode.SCENE3D && sat.orbitPrimitive!==null){
             sat.orbitPrimitive.modelMatrix = rotationMatrix;
           }
+          let newepoch = new Cesium.JulianDate();
+          Cesium.JulianDate.addSeconds(sat.epochOrbit,sat.params.period*60,newepoch);
+          if(viewer.clock.multiplier < 0){
+            if(time < sat.epochOrbit){
+                
+                Cesium.JulianDate.addSeconds(time,-sat.params.period*60,newepoch);
+                console.log(sat.name,"should update orbit");
+                sat.epochOrbit = newepoch;
+                updateSatelliteOrbit(sat,newepoch);
+            }
+          }else if(viewer.clock.multiplier > 0 && viewer.clock.shouldAnimate){
+            if(time > newepoch){
+                console.log(sat.name,"should update orbit");
+                sat.epochOrbit = time;
+                updateSatelliteOrbit(sat,time);
+            }
+          }
 
           // 更新卫星位置（ECI -> ECF）
           const eciPos = satellite.propagate(sat.satrec, date).position;
@@ -1463,7 +1481,7 @@ function updateOrbitsInBatches(satellites, batchSize = 30, delay = 200) {
       // 初始化拖动功能
       initDragFunctionality();
       // 加载TLE数据
-      const tleList = await loadTLEFile("starlink.txt");//"starlink.txt");//"beidou.txt");
+      const tleList = await loadTLEFile("beidou.txt");//"starlink.txt");//"beidou.txt");
       if (tleList.length === 0) {
         console.error("未加载到有效TLE数据");
         return;
