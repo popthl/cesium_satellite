@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="cn">
+
 <head>
   <meta charset="UTF-8">
   <title>卫星轨道可视化系统</title>
@@ -8,17 +9,20 @@
   <script src="https://unpkg.com/satellite.js@5.0.0/dist/satellite.min.js"></script>
   <script src="./globeRotate.js"></script>
   <style>
-    html, body {
+    html,
+    body {
       width: 100%;
       height: 100%;
       margin: 0;
       padding: 0;
       overflow: hidden;
     }
+
     #cesiumContainer {
       width: 100%;
       height: 100%;
     }
+
     .control-panel {
       position: absolute;
       top: 20px;
@@ -34,6 +38,7 @@
       z-index: 1000;
       user-select: none;
     }
+
     .panel-header {
       padding: 12px 15px;
       border-bottom: 1px solid #444;
@@ -42,18 +47,22 @@
       border-top-left-radius: 8px;
       border-top-right-radius: 8px;
     }
+
     .panel-header h3 {
       margin: 0;
       font-size: 16px;
       font-weight: 500;
     }
+
     .panel-content {
       padding: 15px;
     }
+
     .global-controls {
       margin-bottom: 15px;
       padding: 0;
     }
+
     .control-item {
       margin-bottom: 10px;
       display: flex;
@@ -62,6 +71,7 @@
       cursor: pointer;
       width: 100%;
     }
+
     .toggle-switch {
       position: relative;
       width: 0px;
@@ -70,19 +80,21 @@
       appearance: none;
       cursor: pointer;
     }
-    .toggle-switch + label {
+
+    .toggle-switch+label {
       position: relative;
       display: inline-block;
       width: 40px;
       height: 20px;
       background: #af4c4c;
       border: 0.5px solid rgba(117, 117, 117, 0.31);
-      box-shadow: inset 0px 0px 2px 0px rgba(0,0,0,0.2);
+      box-shadow: inset 0px 0px 2px 0px rgba(0, 0, 0, 0.2);
       border-radius: 10px;
       cursor: pointer;
       transition: background 0.3s ease;
     }
-    .toggle-switch + label::before {
+
+    .toggle-switch+label::before {
       content: '';
       position: absolute;
       width: 20px;
@@ -95,24 +107,29 @@
       border-radius: 50%;
       transition: transform 0.3s ease, left 0.3s ease;
     }
-    .toggle-switch:checked + label {
+
+    .toggle-switch:checked+label {
       background: #4caf50;
     }
-    .toggle-switch:checked + label::before {
+
+    .toggle-switch:checked+label::before {
       left: 20px;
       transform: rotate(20deg);
     }
+
     .switch-label-text {
       font-size: 12px;
       user-select: none;
       flex: 1;
     }
+
     /* 分组样式 */
     .constellation-group {
       border-top: 1px solid #444;
       padding-top: 15px;
       margin-top: 10px;
     }
+
     .constellation-header {
       margin: 10px 0 5px 0;
       padding: 6px 10px;
@@ -126,10 +143,12 @@
       justify-content: space-between;
       align-items: center;
     }
+
     .level-1-group {
-      margin-left: 15px;
+      margin-left: 10px;
       margin-bottom: 10px;
     }
+
     .level-1-header {
       margin: 8px 0 5px 0;
       padding: 5px 8px;
@@ -143,10 +162,12 @@
       justify-content: space-between;
       align-items: center;
     }
+
     .level-2-group {
-      margin-left: 30px;
+      margin-left: 15px;
       margin-bottom: 8px;
     }
+
     .level-2-header {
       margin: 6px 0 5px 0;
       padding: 4px 6px;
@@ -160,51 +181,63 @@
       justify-content: space-between;
       align-items: center;
     }
-      /* 三级分组（轨道面）- 修复类名和样式 */
-  .level-3-group {
-    margin-left: 45px; /* 三级分组缩进更大 */
-    margin-bottom: 8px;
-  }
-  .level-3-header {
-    margin: 6px 0 5px 0;
-    padding: 4px 6px;
-    font-size: 12px;
-    font-weight: 500;
-    color: #d0d0d0;
-    background: rgba(120, 80, 80, 0.6); /* 三级分组颜色区分 */
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
+
+    /* 三级分组（轨道面）- 修复类名和样式 */
+    .level-3-group {
+      margin-left: 20px;
+      /* 三级分组缩进更大 */
+      margin-bottom: 8px;
+    }
+
+    .level-3-header {
+      margin: 6px 0 5px 0;
+      padding: 4px 6px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #d0d0d0;
+      background: rgba(120, 80, 80, 0.6);
+      /* 三级分组颜色区分 */
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
     .group-content {
       overflow: hidden;
       transition: max-height 0.3s ease;
     }
+
     .group-collapsed .group-content {
       max-height: 0;
     }
+
     /* 确保嵌套的分组能正确应用样式 */
-.level-1-group.group-collapsed > .group-content,
-.level-2-group.group-collapsed > .group-content,
-.level-3-group.group-collapsed > .group-content {
-  max-height: 0;
-}
+    .level-1-group.group-collapsed>.group-content,
+    .level-2-group.group-collapsed>.group-content,
+    .level-3-group.group-collapsed>.group-content {
+      max-height: 0;
+    }
+
     .group-expanded .group-content {
       max-height: 18000px;
     }
+
     .group-toggle {
       font-size: 10px;
       transition: transform 0.2s ease;
       margin-right: 5px;
     }
+
     .group-collapsed .group-toggle {
       transform: rotate(-90deg);
     }
+
     .group-expanded .group-toggle {
       transform: rotate(0);
     }
+
     .group-count {
       font-size: 11px;
       color: #ccc;
@@ -212,25 +245,29 @@
       padding: 0 5px;
       border-radius: 8px;
     }
+
     .group-control {
       display: flex;
       align-items: center;
       gap: 5px;
     }
+
     .satellite-item {
       display: flex;
       align-items: center;
       padding: 5px 8px;
-      margin: 0 0 4px 45px;
+      margin: 0 0 4px 10px;
       border-radius: 3px;
       background: rgba(60, 60, 60, 0.5);
       cursor: pointer;
       transition: background 0.2s;
       font-size: 12px;
     }
+
     .satellite-item:hover {
       background: rgba(80, 80, 80, 0.7);
     }
+
     .satellite-item .visibility-indicator {
       width: 12px;
       height: 12px;
@@ -241,23 +278,44 @@
       align-items: center;
       justify-content: center;
     }
+
     .satellite-item.visible .visibility-indicator {
       background-color: #4CAF50;
       border-color: #4CAF50;
     }
+
     .satellite-item.visible .visibility-indicator::after {
       content: "✓";
       font-size: 9px;
       color: white;
     }
+
     .satellite-item .name {
       flex: 1;
     }
   </style>
 </head>
+
 <body>
   <div id="cesiumContainer"></div>
-  
+
+  <!-- 缩小后的按钮（默认隐藏） -->
+  <div id="panelToggleBtn" style="
+  position: absolute;
+  top: 50px;
+  width: 40px;
+  height: 40px;
+  background: #191e24;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  z-index: 100;
+  display: none; /* 默认隐藏，缩小状态时显示 */
+  /*transition: all 0.3s ease;*/
+">
+    ≡
+  </div>
   <!-- 可拖动的控制面板 -->
   <div class="control-panel" id="draggablePanel">
     <div class="panel-header" id="dragHandle">
@@ -281,7 +339,7 @@
           <span class="switch-label-text">显示所有卫星名称</span>
         </div>
       </div>
-      
+
       <!-- 卫星分组容器 -->
       <div class="satellite-groups" id="satelliteGroupsContainer">
         <!-- 分组内容将通过JS动态生成 -->
@@ -315,6 +373,7 @@
     const toggleEarthRotate = document.getElementById("toggleEarthRotate");
     const draggablePanel = document.getElementById("draggablePanel");
     const dragHandle = document.getElementById("dragHandle");
+    const toggleBtn = document.getElementById('panelToggleBtn');
 
     /**
      * 实现控制面板拖动功能
@@ -322,9 +381,15 @@
     function initDragFunctionality() {
       let isDragging = false;
       let offsetX, offsetY;
-
+      let isMinimized = false; // 是否处于缩小状态
+      // 初始化面板位置（记录初始宽高用于恢复）
+      const originalWidth = draggablePanel.offsetWidth;
+      const originalHeight = draggablePanel.offsetHeight;
+      const originalLeft = parseInt(draggablePanel.style.left);
+      const originalTop = parseInt(draggablePanel.style.top);
       // 鼠标按下时记录初始位置
       dragHandle.addEventListener('mousedown', (e) => {
+        if (isMinimized) return; // 缩小状态下不允许拖拽
         isDragging = true;
         const panelRect = draggablePanel.getBoundingClientRect();
         offsetX = e.clientX - panelRect.left;
@@ -335,8 +400,8 @@
 
       // 鼠标移动时更新面板位置
       document.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        
+        if (!isDragging || isMinimized) return;
+
         // 计算新位置（限制在窗口内）
         const newX = e.clientX - offsetX;
         const newY = e.clientY - offsetY;
@@ -354,7 +419,65 @@
         draggablePanel.style.top = `${constrainedY}px`;
         draggablePanel.style.right = 'auto'; // 取消右侧定位
         draggablePanel.style.bottom = 'auto'; // 取消底部定位
+        // 检测是否靠近边缘，自动缩小
+        checkEdgePosition();
+
       });
+      // 2. 边缘检测：判断是否靠近左右边缘（≤50px）
+      function checkEdgePosition() {
+        const panelLeft = parseInt(draggablePanel.style.left);
+        const windowWidth = window.innerWidth;
+
+        // 靠近左边缘（≤50px）或右边缘（≥windowWidth - 50px）
+        const nearLeftEdge = panelLeft <= 5;
+        const nearRightEdge = panelLeft >= windowWidth - 5 - draggablePanel.offsetWidth;
+
+        if (nearLeftEdge || nearRightEdge) {
+          minimizePanel(nearLeftEdge ? 'left' : 'right'); // 缩小为按钮
+        } else if (isMinimized) {
+          restorePanel(); // 离开边缘且处于缩小状态，恢复面板
+        }
+      }
+      // 3. 缩小面板为按钮
+      function minimizePanel(side) {
+        isMinimized = true;
+        // 记录当前位置（用于恢复）
+        const currentTop = parseInt(draggablePanel.style.top);
+
+        // 隐藏面板，显示按钮
+        draggablePanel.style.display = 'none';
+        toggleBtn.style.display = 'block';
+        toggleBtn.style.top = `${currentTop}px`;
+
+        // 按钮位置：左边缘或右边缘
+        if (side === 'left') {
+          toggleBtn.style.left = '0px'; // 左边缘贴齐
+        } else {
+          toggleBtn.style.left = `${window.innerWidth - toggleBtn.offsetWidth}px`; // 右边缘贴齐
+        }
+      }
+
+      // 4. 恢复面板原始大小
+      function restorePanel() {
+        isMinimized = false;
+        // 隐藏按钮，显示面板
+        toggleBtn.style.display = 'none';
+        draggablePanel.style.display = 'block';
+
+        // 恢复位置（保持缩小前的Y坐标，X坐标根据边缘微调）
+        const btnTop = parseInt(toggleBtn.style.top);
+        draggablePanel.style.top = `${btnTop}px`;
+
+        // 若从左边缘恢复，左移10px避免贴死；从右边缘恢复，右移10px
+        if (parseInt(toggleBtn.style.left) === 0) {
+          draggablePanel.style.left = '10px';
+        } else {
+          draggablePanel.style.left = `${window.innerWidth - originalWidth - 10}px`;
+        }
+      }
+
+      // 5. 按钮点击事件：恢复面板
+      toggleBtn.addEventListener('click', restorePanel);
 
       // 鼠标释放时结束拖动
       document.addEventListener('mouseup', () => {
@@ -400,14 +523,14 @@
     function getOrbitParameters(satrec) {
       // 轨道周期（分钟）
       //const period = satrec.no ? (1440 / (satrec.no * 24 / 1.02759)) : 0;
-      const period = 2*Math.PI/satrec.no;
-      
+      const period = 2 * Math.PI / satrec.no;
+
       // 轨道倾角（度）
       const inclination = satrec.inclo / Math.PI * 180;
-      
+
       // 升交点赤经（度）
       const raan = satrec.nodeo / Math.PI * 180;
-      
+
       return {
         period,
         inclination,
@@ -432,9 +555,9 @@
         }
       } else if (params.period < 100) { // <20小时
         return { id: 'leo', name: '低轨道 (LEO)' };
-      } else if (params.period < 1200){
-        return { id: 'meo', name: '中轨道 (MEO)'};
-      } else{
+      } else if (params.period < 1200) {
+        return { id: 'meo', name: '中轨道 (MEO)' };
+      } else {
         return { id: 'other', name: '其他轨道' };
       }
     }
@@ -449,7 +572,7 @@
         return { id: 'none', name: '无需细分' };
       }
       //console.log("func getL2:",existingGroups);
-      
+
       // 中低轨按倾角聚类（相差<1度）
       const targetIncl = params.inclination;
       for (const groupId in existingGroups) {
@@ -461,7 +584,7 @@
           };
         }
       }
-      
+
       // 创建新分组
       const inclStr = targetIncl.toFixed(0);
       return {
@@ -479,7 +602,7 @@
       if (level1Id === 'geo' || level1Id === 'igso') {
         return { id: 'none', name: '无需细分' };
       }
-      
+
       // 中低轨按RAAN聚类（相差<1度）
       const targetRaan = params.normalizedRaan;
       for (const groupId in existingGroups) {
@@ -492,7 +615,7 @@
           };
         }
       }
-      
+
       // 创建新分组
       const raanStr = targetRaan.toFixed(0);
       const raanValue = parseFloat(raanStr);
@@ -509,13 +632,13 @@
     function createGroupStructure(satellite) {
       const { constellation, level1, level2, level3, params } = satellite;
       //console.log(constellation,level1,level2);
-      
+
       // 1. 初始化星座分组
       if (!state.constellations[constellation]) {
         const constelElement = document.createElement('div');
         constelElement.className = 'constellation-group group-expanded';
         const switchId = `constel_${constellation}`;
-        
+
         constelElement.innerHTML = `
           <div class="constellation-header">
             <span class="group-toggle">▸</span>
@@ -528,7 +651,7 @@
           </div>
           <div class="group-content"></div>
         `;
-        
+
         // 星座折叠/展开
         const header = constelElement.querySelector('.constellation-header');
         header.addEventListener('click', (e) => {
@@ -537,13 +660,13 @@
             constelElement.classList.toggle('group-collapsed');
           }
         });
-        
+
         // 星座显隐控制
         const toggle = constelElement.querySelector('.toggle-switch');
         toggle.addEventListener('change', (e) => {
           toggleConstellationSatellites(constellation, e.target.checked);
         });
-        
+
         state.constellations[constellation] = {
           name: constellation,
           element: constelElement,
@@ -551,18 +674,18 @@
           toggleElement: toggle,
           level1Groups: {}
         };
-        
+
         satelliteGroupsContainer.appendChild(constelElement);
       }
-      
+
       const constellationGroup = state.constellations[constellation];
-      
+
       // 2. 初始化星座内一级分组（轨道类型）
       if (!constellationGroup.level1Groups[level1.id]) {
         const level1Element = document.createElement('div');
         level1Element.className = 'level-1-group group-expanded';
         const switchId = `level1_${constellation}_${level1.id}`;
-        
+
         level1Element.innerHTML = `
           <div class="level-1-header">
             <span class="group-toggle">▸</span>
@@ -575,7 +698,7 @@
           </div>
           <div class="group-content"></div>
         `;
-        
+
         // 一级分组折叠/展开
         const header = level1Element.querySelector('.level-1-header');
         header.addEventListener('click', (e) => {
@@ -584,27 +707,27 @@
             level1Element.classList.toggle('group-collapsed');
           }
         });
-        
+
         // 一级分组显隐控制
         const toggle = level1Element.querySelector('.toggle-switch');
         toggle.addEventListener('change', (e) => {
           toggleLevel1Satellites(constellation, level1.id, e.target.checked);
         });
-        
+
         constellationGroup.level1Groups[level1.id] = {
           name: level1.name,
-          id:level1.id,
+          id: level1.id,
           element: level1Element,
           countElement: level1Element.querySelector('.group-count'),
           toggleElement: toggle,
           level2Groups: {}
         };
-        
+
         constellationGroup.element.querySelector('.group-content').appendChild(level1Element);
       }
-      
+
       const level1Group = constellationGroup.level1Groups[level1.id];
-      
+
       // GEO/IGSO不创建二级和三级分组
       if (level1.id === 'geo' || level1.id === 'igso') {
         // 将卫星直接添加到一级分组
@@ -613,13 +736,13 @@
         updateGroupCounts();
         return level1Group.element.querySelector('.group-content');
       }
-      
+
       // 3. 初始化星座内二级分组（倾角）
       if (!level1Group.level2Groups[level2.id]) {
         const level2Element = document.createElement('div');
         level2Element.className = 'level-2-group group-expanded';
         const switchId = `level2_${constellation}_${level1.id}_${level2.id}`;
-        
+
         level2Element.innerHTML = `
           <div class="level-2-header">
             <span class="group-toggle">▸</span>
@@ -632,7 +755,7 @@
           </div>
           <div class="group-content"></div>
         `;
-        
+
         // 二级分组折叠/展开
         const header = level2Element.querySelector('.level-2-header');
         header.addEventListener('click', (e) => {
@@ -641,13 +764,13 @@
             level2Element.classList.toggle('group-collapsed');
           }
         });
-        
+
         // 二级分组显隐控制
         const toggle = level2Element.querySelector('.toggle-switch');
         toggle.addEventListener('change', (e) => {
           toggleLevel2Satellites(constellation, level1.id, level2.id, e.target.checked);
         });
-        
+
         level1Group.level2Groups[level2.id] = {
           name: level2.name,
           id: level2.id,
@@ -656,18 +779,18 @@
           toggleElement: toggle,
           level3Groups: {}
         };
-        
+
         level1Group.element.querySelector('.group-content').appendChild(level2Element);
       }
-      
+
       const level2Group = level1Group.level2Groups[level2.id];
-      
+
       // 4. 初始化星座内三级分组（轨道面）
       if (!level2Group.level3Groups[level3.id]) {
         const level3Element = document.createElement('div');
         level3Element.className = 'level-3-group group-expanded';
         const switchId = `level3_${constellation}_${level1.id}_${level2.id}_${level3.id}`;
-        
+
         level3Element.innerHTML = `
           <div class="level-3-header">
             <span class="group-toggle">▸</span>
@@ -680,7 +803,7 @@
           </div>
           <div class="group-content"></div>
         `;
-        
+
         // 三级分组折叠/展开
         const header = level3Element.querySelector('.level-3-header');
         header.addEventListener('click', (e) => {
@@ -689,13 +812,13 @@
             level3Element.classList.toggle('group-collapsed');
           }
         });
-        
+
         // 三级分组显隐控制
         const toggle = level3Element.querySelector('.toggle-switch');
         toggle.addEventListener('change', (e) => {
           toggleLevel3Satellites(constellation, level1.id, level2.id, level3.id, e.target.checked);
         });
-        
+
         level2Group.level3Groups[level3.id] = {
           name: level3.name,
           id: level3.id,
@@ -705,17 +828,17 @@
           satellites: [],
           raanValue: level3.raanValue // 关键：保存RAAN值
         };
-        
+
         level2Group.element.querySelector('.group-content').appendChild(level3Element);
       }
-      
+
       // 将卫星添加到三级分组
       const level3Group = level2Group.level3Groups[level3.id];
       level3Group.satellites.push(satellite.name);
-      
+
       // 更新各级计数
       updateGroupCounts();
-      
+
       return level3Group.element.querySelector('.group-content');
     }
     /**
@@ -727,16 +850,16 @@
         // 遍历星座内的一级分组（仅处理中低轨道）
         Object.values(constellation.level1Groups).forEach(level1Group => {
           if (level1Group.id === 'geo' || level1Group.id === 'igso') return; // 只排序中低轨的轨道面
-          
+
           // 遍历二级分组（倾角）
           Object.values(level1Group.level2Groups).forEach(level2Group => {
             const level3Container = level2Group.element.querySelector('.group-content');
             if (!level3Container) return;
-            
+
             // 1. 获取当前二级分组下的所有轨道面分组，并按RAAN值排序
             const sortedLevel3Groups = Object.values(level2Group.level3Groups)
               .sort((a, b) => a.raanValue - b.raanValue); // 按RAAN从小到大排序
-            
+
             // 2. 清空容器并按排序后的顺序重新添加轨道面
             level3Container.innerHTML = '';
             sortedLevel3Groups.forEach(level3Group => {
@@ -753,7 +876,7 @@
       // 遍历所有星座
       Object.values(state.constellations).forEach(constellation => {
         let constelCount = 0;
-        
+
         // 遍历星座内一级分组
         Object.values(constellation.level1Groups).forEach(level1 => {
           let level1Count = 0;
@@ -764,26 +887,26 @@
             constelCount += level1Count;
             return;
           }
-          
+
           // 中低轨统计二级分组
           Object.values(level1.level2Groups).forEach(level2 => {
             let level2Count = 0;
-            
+
             // 统计三级分组
             Object.values(level2.level3Groups).forEach(level3 => {
               const count = level3.satellites.length;
               level3.countElement.textContent = count;
               level2Count += count;
             });
-            
+
             level2.countElement.textContent = level2Count;
             level1Count += level2Count;
           });
-          
+
           level1.countElement.textContent = level1Count;
           constelCount += level1Count;
         });
-        
+
         constellation.countElement.textContent = constelCount;
       });
     }
@@ -794,7 +917,7 @@
     function toggleConstellationSatellites(constellationId, isVisible) {
       const constellation = state.constellations[constellationId];
       if (!constellation) return;
-      
+
       // 遍历星座内所有一级分组
       Object.values(constellation.level1Groups).forEach(level1 => {
         // GEO/IGSO直接处理一级分组内卫星
@@ -805,7 +928,7 @@
           level1.toggleElement.checked = isVisible;
           return;
         }
-        
+
         // 处理中低轨的二级和三级分组
         Object.values(level1.level2Groups).forEach(level2 => {
           Object.values(level2.level3Groups).forEach(level3 => {
@@ -826,7 +949,7 @@
     function toggleLevel1Satellites(constellationId, level1Id, isVisible) {
       const constellation = state.constellations[constellationId];
       if (!constellation) return;
-      
+
       const level1 = constellation.level1Groups[level1Id];
       if (!level1) return;
       // GEO/IGSO直接处理一级分组内卫星
@@ -838,7 +961,7 @@
         syncConstellationToggleState(constellationId);
         return;
       }
-      
+
       // 处理中低轨的二级和三级分组
       Object.values(level1.level2Groups).forEach(level2 => {
         Object.values(level2.level3Groups).forEach(level3 => {
@@ -849,7 +972,7 @@
         });
         level2.toggleElement.checked = isVisible;
       });
-      
+
       syncConstellationToggleState(constellationId);
     }
 
@@ -859,13 +982,13 @@
     function toggleLevel2Satellites(constellationId, level1Id, level2Id, isVisible) {
       const constellation = state.constellations[constellationId];
       if (!constellation) return;
-      
+
       const level1 = constellation.level1Groups[level1Id];
       if (!level1) return;
-      
+
       const level2 = level1.level2Groups[level2Id];
       if (!level2) return;
-      
+
       // 处理三级分组
       Object.values(level2.level3Groups).forEach(level3 => {
         level3.satellites.forEach(satName => {
@@ -873,7 +996,7 @@
         });
         level3.toggleElement.checked = isVisible;
       });
-      
+
       syncLevel1ToggleState(constellationId, level1Id);
       syncConstellationToggleState(constellationId);
     }
@@ -884,22 +1007,22 @@
     function toggleLevel3Satellites(constellationId, level1Id, level2Id, level3Id, isVisible) {
       const constellation = state.constellations[constellationId];
       if (!constellation) return;
-      
+
       const level1 = constellation.level1Groups[level1Id];
       if (!level1) return;
-      
+
       const level2 = level1.level2Groups[level2Id];
       if (!level2) return;
-      
+
       const level3 = level2.level3Groups[level3Id];
       if (!level3) return;
-      
+
       // 更新卫星状态
       level3.satellites.forEach(satName => {
         updateSatelliteVisibilityByName(satName, isVisible);
       });
       level3.toggleElement.checked = isVisible;
-      
+
       syncLevel2ToggleState(constellationId, level1Id, level2Id);
       syncLevel1ToggleState(constellationId, level1Id);
       syncConstellationToggleState(constellationId);
@@ -923,17 +1046,17 @@
     function syncLevel2ToggleState(constellationId, level1Id, level2Id) {
       const constellation = state.constellations[constellationId];
       if (!constellation) return;
-      
+
       const level1 = constellation.level1Groups[level1Id];
       if (!level1) return;
-      
+
       const level2 = level1.level2Groups[level2Id];
       if (!level2) return;
-      
+
       const level3Groups = Object.values(level2.level3Groups);
       const allChecked = level3Groups.every(g => g.toggleElement.checked);
       const allUnchecked = level3Groups.every(g => !g.toggleElement.checked);
-      
+
       if (allChecked) level2.toggleElement.checked = true;
       else if (allUnchecked) level2.toggleElement.checked = false;
     }
@@ -944,32 +1067,32 @@
     function syncLevel1ToggleState(constellationId, level1Id) {
       const constellation = state.constellations[constellationId];
       if (!constellation) return;
-      
+
       const level1 = constellation.level1Groups[level1Id];
       if (!level1) return;
-      
+
       // GEO/IGSO处理方式
       if (level1.id === 'geo' || level1.id === 'igso') {
         const allVisible = level1.satellites?.every(satName => {
           const sat = state.satellites.find(s => s.name === satName);
           return sat?.isVisible;
         }) || false;
-        
+
         const allHidden = level1.satellites?.every(satName => {
           const sat = state.satellites.find(s => s.name === satName);
           return !sat?.isVisible;
         }) || false;
-        
+
         if (allVisible) level1.toggleElement.checked = true;
         else if (allHidden) level1.toggleElement.checked = false;
         return;
       }
-      
+
       // 中低轨处理方式
       const level2Groups = Object.values(level1.level2Groups);
       const allChecked = level2Groups.every(g => g.toggleElement.checked);
       const allUnchecked = level2Groups.every(g => !g.toggleElement.checked);
-      
+
       if (allChecked) level1.toggleElement.checked = true;
       else if (allUnchecked) level1.toggleElement.checked = false;
     }
@@ -980,11 +1103,11 @@
     function syncConstellationToggleState(constellationId) {
       const constellation = state.constellations[constellationId];
       if (!constellation) return;
-      
+
       const level1Groups = Object.values(constellation.level1Groups);
       const allChecked = level1Groups.every(g => g.toggleElement.checked);
       const allUnchecked = level1Groups.every(g => !g.toggleElement.checked);
-      
+
       if (allChecked) constellation.toggleElement.checked = true;
       else if (allUnchecked) constellation.toggleElement.checked = false;
     }
@@ -1025,23 +1148,23 @@
      * @param {number} period - 轨道周期（毫秒）
      * @returns {Cesium.Cartesian3[]} 轨道点数组
      */
-    function precomputeOrbit(satrec,time) {
+    function precomputeOrbit(satrec, time) {
       //console.log(satrec.ecco);
-      const points = satrec.ecco>0.1?500:5;
-      const period =  2*Math.PI/satrec.no*60*1000;
+      const points = satrec.ecco > 0.1 ? 500 : 5;
+      const period = 2 * Math.PI / satrec.no * 60 * 1000;
       const orbitPoints = [];
       const startTime = Cesium.JulianDate.toDate(time);;
-      
+
       for (let i = 0; i < points; i++) {
         const time = new Date(startTime.getTime() + (i / points) * period);
         const position = satellite.propagate(satrec, time).position;
-        
+
         const isNumber = (val) => typeof val === 'number' && !isNaN(val) && isFinite(val);
-        if(!(isNumber(position.x)&&isNumber(position.y)&&isNumber(position.z))){
-          console.log(satrec.satnum,"propagate error");
+        if (!(isNumber(position.x) && isNumber(position.y) && isNumber(position.z))) {
+          console.log(satrec.satnum, "propagate error");
           return orbitPoints;
         }
-        
+
         // 转换为米并存储
         orbitPoints.push(Cesium.Cartesian3.fromElements(
           position.x * 1000,
@@ -1052,23 +1175,23 @@
       orbitPoints.push(orbitPoints[0]);
       return orbitPoints;
     }
-   function computeECFOrbit(satrec,time){
+    function computeECFOrbit(satrec, time) {
       const startTime = Cesium.JulianDate.toDate(time);
       const points = 300;
-      const period =  2*Math.PI/satrec.no*60*1000;
+      const period = 2 * Math.PI / satrec.no * 60 * 1000;
       const orbitPoints = [];
       for (let i = 0; i < points; i++) {
         const time = new Date(startTime.getTime() + (i / points) * period);
         const eciPosition = satellite.propagate(satrec, time).position;
         const isNumber = (val) => typeof val === 'number' && !isNaN(val) && isFinite(val);
-        if(!(isNumber(eciPosition.x)&&isNumber(eciPosition.y)&&isNumber(eciPosition.z))){
-          console.log(satrec.satnum,"propagate error");
+        if (!(isNumber(eciPosition.x) && isNumber(eciPosition.y) && isNumber(eciPosition.z))) {
+          console.log(satrec.satnum, "propagate error");
           return orbitPoints;
         }
 
         const gmst = satellite.gstime(time); // 计算格林尼治恒星时
         const position = satellite.eciToEcf(eciPosition, gmst);
-      
+
         // 转换为米并存储
         orbitPoints.push(Cesium.Cartesian3.fromElements(
           position.x * 1000,
@@ -1076,9 +1199,22 @@
           position.z * 1000
         ));
       }
-      
+
       return orbitPoints;
     }
+    function periodToHeight(periodSeconds) {
+      const earthRadius = 6371.0; // 地球半径（公里）
+      const GM = 3.986004418e14; // 地球引力常数（m³/s²）
+
+      // 计算半长轴（米）
+      const semiMajorAxis = Math.pow((GM * Math.pow(periodSeconds, 2)) / (4 * Math.PI * Math.PI), 1 / 3);
+
+      // 计算轨道高度（公里）
+      const height = (semiMajorAxis / 1000) - earthRadius;
+
+      return height;
+    }
+
     /**
      * 3. 创建卫星实体和轨道
      * @param {Object} tle - TLE数据
@@ -1091,24 +1227,24 @@
 
         // 1. 确定星座
         const constellation = getConstellation(tle.name);
-        
+
         // 2. 获取轨道参数
         const params = getOrbitParameters(satrec);
-        
+
         // 3. 确定星座内一级分组（轨道类型）
         const level1 = getConstellationLevel1(constellation, params);
 
         // 4. 确定星座内二级分组（倾角）
         const existingLevel2Groups = state.constellations[constellation]?.level1Groups[level1.id]?.level2Groups || {};
         const level2 = getConstellationLevel2(constellation, level1.id, params, existingLevel2Groups);
-        
+
         // 5. 确定星座内三级分组（轨道面）
         const existingLevel3Groups = state.constellations[constellation]?.level1Groups[level1.id]?.level2Groups[level2.id]?.level3Groups || {};
         const level3 = getConstellationLevel3(constellation, level1.id, level2.id, params, existingLevel3Groups);
 
         // 预计算轨道
         //const eciOrbit = precomputeOrbit(satrec,viewer.clock.currentTime);
-        
+
         // 生成随机颜色（区分不同卫星）
         const color = Cesium.Color.fromRandom({
           minimumRed: 0.5,
@@ -1116,27 +1252,6 @@
           minimumBlue: 0.5,
           alpha: 0.8
         });
-
-        /*// 创建轨道Primitive
-        const orbitGeometry = new Cesium.PolylineGeometry({
-          positions: eciOrbit,
-          width: 1,
-          vertexFormat: Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
-        });
-        const orbitInstance = new Cesium.GeometryInstance({
-          geometry: orbitGeometry,
-          id: tle.name
-        });
-        const orbitAppearance = new Cesium.PolylineMaterialAppearance({
-          material: Cesium.Material.fromType(Cesium.Material.ColorType, { color })
-        });
-        const orbitPrimitive = new Cesium.Primitive({
-          geometryInstances: orbitInstance,
-          appearance: orbitAppearance,
-          modelMatrix: Cesium.Matrix4.IDENTITY,
-          show: true
-        });
-        viewer.scene.primitives.add(orbitPrimitive);*/
 
         // 创建卫星点实体
         const satelliteEntity = viewer.entities.add({
@@ -1156,13 +1271,17 @@
           },
           show: true
         });
-
+        let height = periodToHeight(params.period * 60);
         // 创建列表项
         const listItem = document.createElement("div");
         listItem.className = "satellite-item visible";
-        listItem.innerHTML = `
+        
+        listItem.innerHTML = (level1.id ==='geo'||level1.id ==='igso')?`
           <span class="visibility-indicator"></span>
-          <span class="name">${tle.name} (周期: ${params.period.toFixed(1)}分钟)</span>
+          <span class="name">${tle.name} (i:${params.inclination.toFixed(0)}°,raan:${params.raan.toFixed(0)}°)</span>
+        `:`
+          <span class="visibility-indicator"></span>
+          <span class="name">${tle.name} (T:${params.period.toFixed(0)}\‘,H:${height.toFixed(0)})</span>
         `;
         listItem.dataset.name = tle.name;
 
@@ -1171,12 +1290,12 @@
           e.stopPropagation();
           const isVisible = !listItem.classList.contains("visible");
           listItem.classList.toggle("visible", isVisible);
-          
+
           const satellite = state.satellites.find(s => s.name === tle.name);
           if (satellite) {
             satellite.isVisible = isVisible;
             updateSatelliteVisibility(satellite);
-            
+
             // 同步各级开关状态
             if (level1.id === 'geo' || level1.id === 'igso') {
               syncLevel1ToggleState(constellation, level1.id);
@@ -1208,8 +1327,8 @@
           level3,
           params,
           satrec,
-          epochOrbit:new Cesium.JulianDate(),
-          orbitPrimitive:null,
+          epochOrbit: new Cesium.JulianDate(),
+          orbitPrimitive: null,
           satelliteEntity,
           listItem,
           isVisible: true,
@@ -1220,185 +1339,184 @@
         return null;
       }
     }
-/**
- * 为单颗卫星创建轨道（原轨道创建逻辑抽离）
- */
-function createSatelliteOrbit(sat,time,rotationMatrix) {
-  try {
-    // 预计算轨道点（这一步最耗时，放在分批处理中）
-    const eciOrbit = precomputeOrbit(sat.satrec,time);// 点数可减少至200
-    sat.epochOrbit = time;
-    //console.log(sat.name,time,eciOrbit.length);
+    /**
+     * 为单颗卫星创建轨道（原轨道创建逻辑抽离）
+     */
+    function createSatelliteOrbit(sat, time, rotationMatrix) {
+      try {
+        // 预计算轨道点（这一步最耗时，放在分批处理中）
+        const eciOrbit = precomputeOrbit(sat.satrec, time);// 点数可减少至200
+        sat.epochOrbit = time;
+        //console.log(sat.name,time,eciOrbit.length);
 
-    // 创建轨道几何和图元
-    const orbitGeometry = new Cesium.PolylineGeometry({
-      positions: eciOrbit,
-      width: 1,
-      vertexFormat: Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
-    });
-    const orbitInstance = new Cesium.GeometryInstance({
-      geometry: orbitGeometry,
-      id: sat.name
-    });
-    const orbitAppearance = new Cesium.PolylineMaterialAppearance({
-      material: Cesium.Material.fromType(Cesium.Material.ColorType, { color: sat.color })
-    });
-    const orbitPrimitive = new Cesium.Primitive({
-      geometryInstances: orbitInstance,
-      appearance: orbitAppearance,
-      modelMatrix: rotationMatrix,
-      show: sat.isVisible && state.globalShowOrbits
-    });
+        // 创建轨道几何和图元
+        const orbitGeometry = new Cesium.PolylineGeometry({
+          positions: eciOrbit,
+          width: 1,
+          vertexFormat: Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
+        });
+        const orbitInstance = new Cesium.GeometryInstance({
+          geometry: orbitGeometry,
+          id: sat.name
+        });
+        const orbitAppearance = new Cesium.PolylineMaterialAppearance({
+          material: Cesium.Material.fromType(Cesium.Material.ColorType, { color: sat.color })
+        });
+        const orbitPrimitive = new Cesium.Primitive({
+          geometryInstances: orbitInstance,
+          appearance: orbitAppearance,
+          modelMatrix: rotationMatrix,
+          show: sat.isVisible && state.globalShowOrbits
+        });
 
-    // 添加到场景并更新卫星对象
-    viewer.scene.primitives.add(orbitPrimitive);
-    sat.orbitPrimitive = orbitPrimitive;
-  } catch (error) {
-    console.error(`创建${sat.name}轨道失败:`, error);
-  }
-}
-/**
- * 分批次创建卫星轨道
- * @param {Array} satellites - 所有卫星对象数组
- * @param {number} batchSize - 每批创建的轨道数量（建议20~50）
- * @param {number} delay - 批次间隔时间（毫秒，建议100~300）
- */
-function createOrbitsInBatches(satellites, batchSize = 30, delay = 200) {
-  let index = 0; // 当前处理的卫星索引
-  const time =viewer.clock.currentTime;
-  const date = Cesium.JulianDate.toDate(time);
-  const gmst = satellite.gstime(date); // 计算格林尼治恒星时
-  const rotationMatrix = Cesium.Matrix4.fromRotation(
-    new Cesium.Matrix3.fromRotationZ(-gmst) // 地球自转矩阵
-  ); 
-  // 处理单批轨道创建
-  function processBatch() {
-    if (index >= satellites.length) {
-      console.log("所有轨道创建完成");
-      return; // 全部处理完，退出
-    }
-    console.log("batch: ",index," length: ",satellites.length);
-    // 计算当前批次的卫星范围
-    const end = Math.min(index + batchSize, satellites.length);
-    for (let i = index; i < end; i++) {
-      const sat = satellites[i];
-      if (!sat.orbitPrimitive) { // 跳过已创建轨道的卫星
-        createSatelliteOrbit(sat,time,rotationMatrix); // 为单颗卫星创建轨道
+        // 添加到场景并更新卫星对象
+        viewer.scene.primitives.add(orbitPrimitive);
+        sat.orbitPrimitive = orbitPrimitive;
+      } catch (error) {
+        console.error(`创建${sat.name}轨道失败:`, error);
       }
     }
-
-    index = end; // 更新索引
-    // 延迟处理下一批，避免阻塞主线程
-    setTimeout(processBatch, delay);
-  }
-
-  // 启动第一批处理
-  processBatch();
-}
-    function updateSatelliteOrbit(sat,time,rotationMatrix){
-        var orbitpoint;
-        var modelmatrix;
-        if(viewer.scene.mode === Cesium.SceneMode.SCENE3D){
-          orbitpoint = precomputeOrbit(sat.satrec,time);
-          modelmatrix = rotationMatrix;
-        }else{
-          orbitpoint = computeECFOrbit(sat.satrec,time);
-          modelmatrix = Cesium.Matrix4.IDENTITY;
+    /**
+     * 分批次创建卫星轨道
+     * @param {Array} satellites - 所有卫星对象数组
+     * @param {number} batchSize - 每批创建的轨道数量（建议20~50）
+     * @param {number} delay - 批次间隔时间（毫秒，建议100~300）
+     */
+    function createOrbitsInBatches(satellites, batchSize = 30, delay = 200) {
+      let index = 0; // 当前处理的卫星索引
+      const time = viewer.clock.currentTime;
+      const date = Cesium.JulianDate.toDate(time);
+      const gmst = satellite.gstime(date); // 计算格林尼治恒星时
+      const rotationMatrix = Cesium.Matrix4.fromRotation(
+        new Cesium.Matrix3.fromRotationZ(-gmst) // 地球自转矩阵
+      );
+      // 处理单批轨道创建
+      function processBatch() {
+        if (index >= satellites.length) {
+          console.log("所有轨道创建完成");
+          return; // 全部处理完，退出
         }
-        
-        // 3. 创建新的轨道几何（使用新坐标点）
-  const newOrbitGeometry = new Cesium.PolylineGeometry({
-    positions: orbitpoint,  // 新坐标点数组
-    width: 1,                   // 线宽（保持不变或修改）
-    vertexFormat: Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
-  });
+        console.log("batch: ", index, " length: ", satellites.length);
+        // 计算当前批次的卫星范围
+        const end = Math.min(index + batchSize, satellites.length);
+        for (let i = index; i < end; i++) {
+          const sat = satellites[i];
+          if (!sat.orbitPrimitive) { // 跳过已创建轨道的卫星
+            createSatelliteOrbit(sat, time, rotationMatrix); // 为单颗卫星创建轨道
+          }
+        }
 
-  // 4. 创建新的几何实例
-  const newOrbitInstance = new Cesium.GeometryInstance({
-    geometry: newOrbitGeometry,
-    id: sat.name  // 保持与卫星关联的ID
-  });
+        index = end; // 更新索引
+        // 延迟处理下一批，避免阻塞主线程
+        setTimeout(processBatch, delay);
+      }
 
-  // 5. 复用原有的外观样式（或创建新样式）
-  const newOrbitAppearance = sat.orbitPrimitive.appearance;  // 复用颜色等样式
-
-  // 6. 创建新的轨道图元
-  const newOrbitPrimitive = new Cesium.Primitive({
-    geometryInstances: newOrbitInstance,
-    appearance: newOrbitAppearance,
-    modelMatrix: modelmatrix, // 保持坐标系转换矩阵
-    show: sat.orbitPrimitive.show                // 保持显隐状态
-  });
-
-  // 7. 将新图元添加到场景，并更新卫星对象的引用
-  viewer.scene.primitives.remove(sat.orbitPrimitive);
-  viewer.scene.primitives.add(newOrbitPrimitive);
-  sat.orbitPrimitive = newOrbitPrimitive;
-  sat.epochOrbit = time;
-      
+      // 启动第一批处理
+      processBatch();
     }
-/**
- * 分批次更新卫星轨道
- * @param {Array} satellites - 所有卫星对象数组
- * @param {number} batchSize - 每批创建的轨道数量（建议20~50）
- * @param {number} delay - 批次间隔时间（毫秒，建议100~300）
- */
-function updateOrbitsInBatches(satellites, batchSize = 30, delay = 200) {
-  let index = 0; // 当前处理的卫星索引
-  const time =viewer.clock.currentTime;
-  const date = Cesium.JulianDate.toDate(time);
-  const gmst = satellite.gstime(date); // 计算格林尼治恒星时
-  const rotationMatrix = Cesium.Matrix4.fromRotation(
-    new Cesium.Matrix3.fromRotationZ(-gmst) // 地球自转矩阵
-  ); 
-  // 处理单批轨道创建
-  function processBatch() {
-    if (index >= satellites.length) {
-      console.log("所有轨道更新完成");
-      return; // 全部处理完，退出
-    }
-    console.log("batch: ",index," length: ",satellites.length);
-    // 计算当前批次的卫星范围
-    const end = Math.min(index + batchSize, satellites.length);
-    for (let i = index; i < end; i++) {
-      const sat = satellites[i];
-      updateSatelliteOrbit(sat,time,rotationMatrix); // 为单颗卫星创建轨道
-    }
+    function updateSatelliteOrbit(sat, time, rotationMatrix) {
+      var orbitpoint;
+      var modelmatrix;
+      if (viewer.scene.mode === Cesium.SceneMode.SCENE3D) {
+        orbitpoint = precomputeOrbit(sat.satrec, time);
+        modelmatrix = rotationMatrix;
+      } else {
+        orbitpoint = computeECFOrbit(sat.satrec, time);
+        modelmatrix = Cesium.Matrix4.IDENTITY;
+      }
 
-    index = end; // 更新索引
-    // 延迟处理下一批，避免阻塞主线程
-    setTimeout(processBatch, delay);
-  }
+      // 3. 创建新的轨道几何（使用新坐标点）
+      const newOrbitGeometry = new Cesium.PolylineGeometry({
+        positions: orbitpoint,  // 新坐标点数组
+        width: 1,                   // 线宽（保持不变或修改）
+        vertexFormat: Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
+      });
 
-  // 启动第一批处理
-  processBatch();
-}    /**
+      // 4. 创建新的几何实例
+      const newOrbitInstance = new Cesium.GeometryInstance({
+        geometry: newOrbitGeometry,
+        id: sat.name  // 保持与卫星关联的ID
+      });
+
+      // 5. 复用原有的外观样式（或创建新样式）
+      const newOrbitAppearance = sat.orbitPrimitive.appearance;  // 复用颜色等样式
+
+      // 6. 创建新的轨道图元
+      const newOrbitPrimitive = new Cesium.Primitive({
+        geometryInstances: newOrbitInstance,
+        appearance: newOrbitAppearance,
+        modelMatrix: modelmatrix, // 保持坐标系转换矩阵
+        show: sat.orbitPrimitive.show                // 保持显隐状态
+      });
+
+      // 7. 将新图元添加到场景，并更新卫星对象的引用
+      viewer.scene.primitives.remove(sat.orbitPrimitive);
+      viewer.scene.primitives.add(newOrbitPrimitive);
+      sat.orbitPrimitive = newOrbitPrimitive;
+      sat.epochOrbit = time;
+    }
+    /**
+     * 分批次更新卫星轨道
+     * @param {Array} satellites - 所有卫星对象数组
+     * @param {number} batchSize - 每批创建的轨道数量（建议20~50）
+     * @param {number} delay - 批次间隔时间（毫秒，建议100~300）
+     */
+    function updateOrbitsInBatches(satellites, batchSize = 30, delay = 200) {
+      let index = 0; // 当前处理的卫星索引
+      const time = viewer.clock.currentTime;
+      const date = Cesium.JulianDate.toDate(time);
+      const gmst = satellite.gstime(date); // 计算格林尼治恒星时
+      const rotationMatrix = Cesium.Matrix4.fromRotation(
+        new Cesium.Matrix3.fromRotationZ(-gmst) // 地球自转矩阵
+      );
+      // 处理单批轨道创建
+      function processBatch() {
+        if (index >= satellites.length) {
+          console.log("所有轨道更新完成");
+          return; // 全部处理完，退出
+        }
+        console.log("batch: ", index, " length: ", satellites.length);
+        // 计算当前批次的卫星范围
+        const end = Math.min(index + batchSize, satellites.length);
+        for (let i = index; i < end; i++) {
+          const sat = satellites[i];
+          updateSatelliteOrbit(sat, time, rotationMatrix); // 为单颗卫星创建轨道
+        }
+
+        index = end; // 更新索引
+        // 延迟处理下一批，避免阻塞主线程
+        setTimeout(processBatch, delay);
+      }
+
+      // 启动第一批处理
+      processBatch();
+    }    /**
      * 同步三级分组开关状态
      */
     function syncLevel3ToggleState(constellationId, level1Id, level2Id, level3Id) {
       const constellation = state.constellations[constellationId];
       if (!constellation) return;
-      
+
       const level1 = constellation.level1Groups[level1Id];
       if (!level1) return;
-      
+
       const level2 = level1.level2Groups[level2Id];
       if (!level2) return;
-      
+
       const level3 = level2.level3Groups[level3Id];
       if (!level3) return;
-      
+
       // 检查该组所有卫星状态
       const allVisible = level3.satellites.every(satName => {
         const sat = state.satellites.find(s => s.name === satName);
         return sat?.isVisible;
       });
-      
+
       const allHidden = level3.satellites.every(satName => {
         const sat = state.satellites.find(s => s.name === satName);
         return !sat?.isVisible;
       });
-      
+
       if (allVisible) level3.toggleElement.checked = true;
       else if (allHidden) level3.toggleElement.checked = false;
     }
@@ -1410,10 +1528,10 @@ function updateOrbitsInBatches(satellites, batchSize = 30, delay = 200) {
     function updateSatelliteVisibility(sat) {
       const { isVisible } = sat;
       // 轨道可见性 = 自身可见 && 全局轨道开启
-      if(sat.orbitPrimitive!==null){
+      if (sat.orbitPrimitive !== null) {
         sat.orbitPrimitive.show = isVisible && state.globalShowOrbits;
       }
-      
+
       // 卫星点位可见性 = 自身可见
       sat.satelliteEntity.show = isVisible;
       // 标签可见性 = 自身可见 && 全局标签开启
@@ -1436,34 +1554,35 @@ function updateOrbitsInBatches(satellites, batchSize = 30, delay = 200) {
         // 只更新可见卫星
         if (sat.isVisible) {
           // 更新轨道旋转
-          if(viewer.scene.mode === Cesium.SceneMode.SCENE3D && sat.orbitPrimitive!==null){
+          if (viewer.scene.mode === Cesium.SceneMode.SCENE3D && sat.orbitPrimitive !== null) {
             sat.orbitPrimitive.modelMatrix = rotationMatrix;
           }
           let newepoch = new Cesium.JulianDate();
-          Cesium.JulianDate.addSeconds(sat.epochOrbit,sat.params.period*60,newepoch);
-          if(viewer.clock.multiplier < 0){
-            if(time < sat.epochOrbit){
-                
-                Cesium.JulianDate.addSeconds(time,-sat.params.period*60,newepoch);
-                console.log(sat.name,"should update orbit");
-                sat.epochOrbit = newepoch;
-                updateSatelliteOrbit(sat,newepoch);
+          Cesium.JulianDate.addSeconds(sat.epochOrbit, sat.params.period * 60, newepoch);
+          if (viewer.clock.multiplier < 0) {
+            if (time < sat.epochOrbit) {
+
+              Cesium.JulianDate.addSeconds(time, -sat.params.period * 60, newepoch);
+              console.log(sat.name, "should update orbit");
+              sat.epochOrbit = newepoch;
+              updateSatelliteOrbit(sat, newepoch);
             }
-          }else if(viewer.clock.multiplier > 0 && viewer.clock.shouldAnimate){
-            if(time > newepoch){
-                console.log(sat.name,"should update orbit");
-                sat.epochOrbit = time;
-                updateSatelliteOrbit(sat,time);
+          } else if (viewer.clock.multiplier > 0 && viewer.clock.shouldAnimate) {
+            if (time > newepoch) {
+              console.log(sat.name, "should update orbit");
+              sat.epochOrbit = time;
+              updateSatelliteOrbit(sat, time);
             }
           }
 
           // 更新卫星位置（ECI -> ECF）
           const eciPos = satellite.propagate(sat.satrec, date).position;
-        const isNumber = (val) => typeof val === 'number' && !isNaN(val) && isFinite(val);
-        if(!(isNumber(eciPos.x)&&isNumber(eciPos.y)&&isNumber(eciPos.z))){
-          console.log(sat.name,"propagate error");
-          return;
-        }
+          //console.log(sat.name,eciPos);
+          const isNumber = (val) => typeof val === 'number' && !isNaN(val) && isFinite(val);
+          if (!(isNumber(eciPos.x) && isNumber(eciPos.y) && isNumber(eciPos.z))) {
+            console.log(sat.name, "propagate error");
+            return;
+          }
 
           const ecfPos = satellite.eciToEcf(eciPos, gmst);
           sat.satelliteEntity.position = new Cesium.Cartesian3(
@@ -1481,44 +1600,44 @@ function updateOrbitsInBatches(satellites, batchSize = 30, delay = 200) {
       // 初始化拖动功能
       initDragFunctionality();
       // 加载TLE数据
-      const tleList = await loadTLEFile("beidou.txt");//"starlink.txt");//"beidou.txt");
+      const tleList = await loadTLEFile("gnss.txt");//"StarLink_TLE.starlink.gnss.beidou"
       if (tleList.length === 0) {
         console.error("未加载到有效TLE数据");
         return;
       }
       let t0 = viewer.clock.currentTime;
-      let jdt0=Cesium.JulianDate.totalDays(t0);
+      let jdt0 = Cesium.JulianDate.totalDays(t0);
       var tt = new Cesium.JulianDate();
-      let t1 = Cesium.JulianDate.clone(t0,tt);
+      let t1 = Cesium.JulianDate.clone(t0, tt);
       //console.log(t0,jdt0,t0.dayNumber+t0.secondsOfDay/86400);
       // 创建所有卫星并统计成功创建的数量
       let validSatelliteCount = 0;
       tleList.forEach(tle => {
         const sat = createSatellite(tle);
-        if (sat){
-            state.satellites.push(sat);
-            validSatelliteCount++; // 只统计成功创建的卫星
-            jdt0 = Cesium.JulianDate.totalDays(t0);
-            let dt = jdt0 - sat.satrec.jdsatepoch;
-            //console.log(jdt0,sat.satrec.jdsatepoch,dt);
-            tt = Cesium.JulianDate.clone(t0,tt);
-            Cesium.JulianDate.addSeconds(tt,-dt*86400+sat.params.period*60,tt);
-            //console.log("tt: ",tt);
-            if(validSatelliteCount===1){
-              Cesium.JulianDate.clone(tt,t1);
-            }else{
-              if(tt>t1){
-                Cesium.JulianDate.clone(tt,t1);
-              }
+        if (sat) {
+          state.satellites.push(sat);
+          validSatelliteCount++; // 只统计成功创建的卫星
+          jdt0 = Cesium.JulianDate.totalDays(t0);
+          let dt = jdt0 - sat.satrec.jdsatepoch;
+          //console.log(jdt0,sat.satrec.jdsatepoch,dt);
+          tt = Cesium.JulianDate.clone(t0, tt);
+          Cesium.JulianDate.addSeconds(tt, -dt * 86400 + sat.params.period * 60, tt);
+          //console.log("tt: ",tt);
+          if (validSatelliteCount === 1) {
+            Cesium.JulianDate.clone(tt, t1);
+          } else {
+            if (tt > t1) {
+              Cesium.JulianDate.clone(tt, t1);
             }
-            if(dt>0){
-              Cesium.JulianDate.addSeconds(t0,-dt*86400,t0);
-            }
+          }
+          if (dt > 0) {
+            Cesium.JulianDate.addSeconds(t0, -dt * 86400, t0);
+          }
         }
       });
-      console.log("t0: ",t0,"t1: ",t1);
-      console.log("total: ",validSatelliteCount);
-    //satelliteListTitle.textContent = `卫星列表(${validSatelliteCount})`;
+      console.log("t0: ", t0, "t1: ", t1);
+      console.log("total: ", validSatelliteCount);
+      //satelliteListTitle.textContent = `卫星列表(${validSatelliteCount})`;
       // 关键：所有卫星加载完成后，对轨道面进行排序
       sortOrbitPlanes();
 
@@ -1534,10 +1653,10 @@ function updateOrbitsInBatches(satellites, batchSize = 30, delay = 200) {
       });
       let globeRotate = new GlobeRotate(viewer);
       toggleEarthRotate.addEventListener("change", (e) => {
-        if( e.target.checked)
-            globeRotate.start();
+        if (e.target.checked)
+          globeRotate.start();
         else
-            globeRotate.stop();
+          globeRotate.stop();
         state.satellites.forEach(sat => updateSatelliteVisibility(sat));
       });
       globeRotate.start();
@@ -1545,64 +1664,48 @@ function updateOrbitsInBatches(satellites, batchSize = 30, delay = 200) {
       viewer.clock.stopTime = t1;
       viewer.clock.currentTime = t0;
       viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP;
-      viewer.timeline.zoomTo(t0,t1);
+      viewer.timeline.zoomTo(t0, t1);
       viewer.clock.shouldAnimate = false;
       updateSatellites(t0);
-// 第二步：分批次创建轨道（初始化完成后开始）
-  setTimeout(() => {
-    createOrbitsInBatches(state.satellites, 30, 200); // 每批30个，间隔200ms
-  }, 500); // 延迟500ms，确保点和UI先加载完成
-  //updateSatellites(viewer.clock.currentTime);
-  //       // 监听时间变化，实时更新
+      // 第二步：分批次创建轨道（初始化完成后开始）
+      setTimeout(() => {
+        createOrbitsInBatches(state.satellites, 30, 200); // 每批30个，间隔200ms
+      }, 500); // 延迟500ms，确保点和UI先加载完成
+      //updateSatellites(viewer.clock.currentTime);
+      //       // 监听时间变化，实时更新
       viewer.clock.onTick.addEventListener(clock => {
-        if(clock.shouldAnimate){
+        if (clock.shouldAnimate) {
           updateSatellites(clock.currentTime);
         }
       });
-// 监听时间线手动调整（暂停时拖动时间线也会触发）
-viewer.timeline.addEventListener('settime', (event) => {
-  // 从事件对象的clock属性中获取当前时间
-  const currentTime = event.clock.currentTime;
-  if (currentTime) {
-    updateSatellites(currentTime);
-  }
-});
-let currentMode = viewer.scene.mode;
-viewer.scene.morphComplete.addEventListener(() => {
-  // mode 表示切换后的视图模式：
-  // - Cesium.SceneMode.SCENE2D：2D视图
-  // - Cesium.SceneMode.SCENE3D：3D视图
-  // - Cesium.SceneMode.COLUMBUS_VIEW：哥伦布视图
-const newMode = viewer.scene.mode;
-  console.log("视图模式切换完成，当前模式：", newMode,currentMode);
-  if(newMode === Cesium.SceneMode.SCENE2D){//换到2D
-    viewer.scene.camera.position.z=50000000;
-    
-  }//else if(newMode === Cesium.SceneMode.SCENE3D){//转换回3D
-  if(currentMode === Cesium.SceneMode.SCENE3D || newMode === Cesium.SceneMode.SCENE3D){
-    //updateOrbit(viewer.clock.currentTime);
-    updateOrbitsInBatches(state.satellites,50,200);
-  }
-  //}
-  
-  currentMode = newMode;
-});
-      /*viewer.scene.preUpdate.addEventListener(() => {
-        const newMode = viewer.scene.mode;
-        if (newMode !== currentMode) {
-          if(newMode === Cesium.SceneMode.SCENE2D){
-            console.log("2D",viewer.scene.camera.position.z);
-            viewer.scene.camera.position.z=50000000;
-            //state.satellites.forEach(sat => {sat.orbitPrimitive.modelMatrix =Cesium.Matrix4.IDENTITY;});
-            updateOrbit(viewer.clock.currentTime);
-          }
-          currentMode = newMode;
+      // 监听时间线手动调整（暂停时拖动时间线也会触发）
+      viewer.timeline.addEventListener('settime', (event) => {
+        // 从事件对象的clock属性中获取当前时间
+        const currentTime = event.clock.currentTime;
+        if (currentTime) {
+          updateSatellites(currentTime);
         }
-      });*/
-      // 初始视角
-      /*if (state.satellites.length > 0) {
-        viewer.zoomTo(state.satellites[0].satelliteEntity, new Cesium.HeadingPitchRange(0, -0.5, 10000000));
-      }*/
+      });
+      let currentMode = viewer.scene.mode;
+      viewer.scene.morphComplete.addEventListener(() => {
+        // mode 表示切换后的视图模式：
+        // - Cesium.SceneMode.SCENE2D：2D视图
+        // - Cesium.SceneMode.SCENE3D：3D视图
+        // - Cesium.SceneMode.COLUMBUS_VIEW：哥伦布视图
+        const newMode = viewer.scene.mode;
+        console.log("视图模式切换完成，当前模式：", newMode, currentMode);
+        if (newMode === Cesium.SceneMode.SCENE2D) {//换到2D
+          viewer.scene.camera.position.z = 50000000;
+
+        }//else if(newMode === Cesium.SceneMode.SCENE3D){//转换回3D
+        if (currentMode === Cesium.SceneMode.SCENE3D || newMode === Cesium.SceneMode.SCENE3D) {
+          //updateOrbit(viewer.clock.currentTime);
+          updateOrbitsInBatches(state.satellites, 50, 200);
+        }
+        //}
+
+        currentMode = newMode;
+      });
     }
 
     // 启动应用
@@ -1610,4 +1713,5 @@ const newMode = viewer.scene.mode;
     //console.log(state);
   </script>
 </body>
+
 </html>
